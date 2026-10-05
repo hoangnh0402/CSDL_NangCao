@@ -1,0 +1,94 @@
+# Môi trường thực nghiệm cho Tiểu luận CSDL Nâng cao – Đề tài 5
+# - Replica Set rs0 (3 nút): dùng cho Chương 1, Chương 2 và mục 3.1
+# - Sharded Cluster: config server (cfgrs, 3 nút) + shard1rs (3 nút) + shard2rs (3 nút) + mongos
+x-mongod: &mongod
+  image: mongo:8.0
+  networks: [mongo-net]
+  volumes:
+    - ./scripts:/scripts:ro
+
+services:
+  # ---------------- Replica Set rs0 ----------------
+  mongo1:
+    <<: *mongod
+    container_name: mongo1
+    hostname: mongo1
+    command: mongod --replSet rs0 --bind_ip_all --port 27017 --wiredTigerCacheSizeGB 0.25
+  mongo2:
+    <<: *mongod
+    container_name: mongo2
+    hostname: mongo2
+    command: mongod --replSet rs0 --bind_ip_all --port 27017 --wiredTigerCacheSizeGB 0.25
+  mongo3:
+    <<: *mongod
+    container_name: mongo3
+    hostname: mongo3
+    command: mongod --replSet rs0 --bind_ip_all --port 27017 --wiredTigerCacheSizeGB 0.25
+
+  # ---------------- Config Server Replica Set ----------------
+  cfgsvr1:
+    <<: *mongod
+    container_name: cfgsvr1
+    hostname: cfgsvr1
+    command: mongod --configsvr --replSet cfgrs --bind_ip_all --port 27019 --wiredTigerCacheSizeGB 0.25
+  cfgsvr2:
+    <<: *mongod
+    container_name: cfgsvr2
+    hostname: cfgsvr2
+    command: mongod --configsvr --replSet cfgrs --bind_ip_all --port 27019 --wiredTigerCacheSizeGB 0.25
+  cfgsvr3:
+    <<: *mongod
+    container_name: cfgsvr3
+    hostname: cfgsvr3
+    command: mongod --configsvr --replSet cfgrs --bind_ip_all --port 27019 --wiredTigerCacheSizeGB 0.25
+
+  # ---------------- Shard 1 (Replica Set shard1rs) ----------------
+  shard1a:
+    <<: *mongod
+    container_name: shard1a
+    hostname: shard1a
+    command: mongod --shardsvr --replSet shard1rs --bind_ip_all --port 27018 --wiredTigerCacheSizeGB 0.25
+  shard1b:
+    <<: *mongod
+    container_name: shard1b
+    hostname: shard1b
+    command: mongod --shardsvr --replSet shard1rs --bind_ip_all --port 27018 --wiredTigerCacheSizeGB 0.25
+  shard1c:
+    <<: *mongod
+    container_name: shard1c
+    hostname: shard1c
+    command: mongod --shardsvr --replSet shard1rs --bind_ip_all --port 27018 --wiredTigerCacheSizeGB 0.25
+
+  # ---------------- Shard 2 (Replica Set shard2rs) ----------------
+  shard2a:
+    <<: *mongod
+    container_name: shard2a
+    hostname: shard2a
+    command: mongod --shardsvr --replSet shard2rs --bind_ip_all --port 27018 --wiredTigerCacheSizeGB 0.25
+  shard2b:
+    <<: *mongod
+    container_name: shard2b
+    hostname: shard2b
+    command: mongod --shardsvr --replSet shard2rs --bind_ip_all --port 27018 --wiredTigerCacheSizeGB 0.25
+  shard2c:
+    <<: *mongod
+    container_name: shard2c
+    hostname: shard2c
+    command: mongod --shardsvr --replSet shard2rs --bind_ip_all --port 27018 --wiredTigerCacheSizeGB 0.25
+
+  # ---------------- Router ----------------
+  mongos:
+    image: mongo:8.0
+    container_name: mongos
+    hostname: mongos
+    networks: [mongo-net]
+    volumes:
+      - ./scripts:/scripts:ro
+    command: mongos --configdb cfgrs/cfgsvr1:27019,cfgsvr2:27019,cfgsvr3:27019 --bind_ip_all --port 27017
+    ports:
+      - "27030:27017"
+    depends_on: [cfgsvr1, cfgsvr2, cfgsvr3]
+
+networks:
+  mongo-net:
+    name: mongo-net

@@ -1,0 +1,548 @@
+[
+ {
+  "kind": "mongosh",
+  "name": "cfg_init",
+  "container": "cfgsvr1",
+  "uri": "mongodb://cfgsvr1:27019/?directConnection=true",
+  "steps": [
+   {
+    "id": "cfg_initiate",
+    "command": "rs.initiate({\n  _id: \"cfgrs\",\n  configsvr: true,\n  members: [\n    { _id: 0, host: \"cfgsvr1:27019\" },\n    { _id: 1, host: \"cfgsvr2:27019\" },\n    { _id: 2, host: \"cfgsvr3:27019\" }\n  ]\n})",
+    "output": "{\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185707, i: 1 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185707, i: 1 })\n}",
+    "prompt": "test>"
+   }
+  ],
+  "raw": "test> @@STEP:cfg_initiate@@\n\ntest> {\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185707, i: 1 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185707, i: 1 })\n}\ntest> @@STEP:__end__@@\n\ntest> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "shard1_init",
+  "container": "shard1a",
+  "uri": "mongodb://shard1a:27018/?directConnection=true",
+  "steps": [
+   {
+    "id": "shard1_initiate",
+    "command": "rs.initiate({\n  _id: \"shard1rs\",\n  members: [\n    { _id: 0, host: \"shard1a:27018\", priority: 2 },\n    { _id: 1, host: \"shard1b:27018\" },\n    { _id: 2, host: \"shard1c:27018\" }\n  ]\n})",
+    "output": "{\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185708, i: 1 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185708, i: 1 })\n}",
+    "prompt": "test>"
+   }
+  ],
+  "raw": "test> @@STEP:shard1_initiate@@\n\ntest> {\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185708, i: 1 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185708, i: 1 })\n}\ntest> @@STEP:__end__@@\n\ntest> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "shard2_init",
+  "container": "shard2a",
+  "uri": "mongodb://shard2a:27018/?directConnection=true",
+  "steps": [
+   {
+    "id": "shard2_initiate",
+    "command": "rs.initiate({\n  _id: \"shard2rs\",\n  members: [\n    { _id: 0, host: \"shard2a:27018\", priority: 2 },\n    { _id: 1, host: \"shard2b:27018\" },\n    { _id: 2, host: \"shard2c:27018\" }\n  ]\n})",
+    "output": "{\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185709, i: 1 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185709, i: 1 })\n}",
+    "prompt": "test>"
+   },
+   {
+    "id": "_wait",
+    "command": "sleep(15000)",
+    "output": "",
+    "prompt": "test>"
+   }
+  ],
+  "raw": "test> @@STEP:shard2_initiate@@\n\ntest> {\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185709, i: 1 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185709, i: 1 })\n}\ntest> @@STEP:_wait@@\n\ntest> \nshard2rs [direct: primary] test> @@STEP:__end__@@\n\nshard2rs [direct: primary] test> "
+ },
+ {
+  "kind": "shell",
+  "name": "shell",
+  "steps": [
+   {
+    "id": "_restart_mongos",
+    "command": "docker restart mongos > /dev/null && sleep 10 && echo ok",
+    "output": "ok"
+   }
+  ]
+ },
+ {
+  "kind": "mongosh",
+  "name": "mongos_setup",
+  "container": "mongos",
+  "uri": "mongodb://mongos:27017/",
+  "steps": [
+   {
+    "id": "add_shard1",
+    "command": "sh.addShard(\"shard1rs/shard1a:27018,shard1b:27018,shard1c:27018\")",
+    "output": "{\n  shardAdded: 'shard1rs',\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185739, i: 20 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185739, i: 20 })\n}",
+    "prompt": "[direct: mongos] test>"
+   },
+   {
+    "id": "add_shard2",
+    "command": "sh.addShard(\"shard2rs/shard2a:27018,shard2b:27018,shard2c:27018\")",
+    "output": "{\n  shardAdded: 'shard2rs',\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185739, i: 43 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185739, i: 37 })\n}",
+    "prompt": "[direct: mongos] test>"
+   },
+   {
+    "id": "list_shards",
+    "command": "db.adminCommand({ listShards: 1 }).shards.map(s => ({ _id: s._id, host: s.host, state: s.state }))",
+    "output": "[\n  {\n    _id: 'shard1rs',\n    host: 'shard1rs/shard1a:27018,shard1b:27018,shard1c:27018',\n    state: 1\n  },\n  {\n    _id: 'shard2rs',\n    host: 'shard2rs/shard2a:27018,shard2b:27018,shard2c:27018',\n    state: 1\n  }\n]",
+    "prompt": "[direct: mongos] test>"
+   },
+   {
+    "id": "use_db",
+    "command": "use QLThietBi",
+    "output": "switched to db QLThietBi",
+    "prompt": "[direct: mongos] test>"
+   },
+   {
+    "id": "enable_sharding",
+    "command": "sh.enableSharding(\"QLThietBi\", \"shard1rs\")",
+    "output": "{\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185739, i: 51 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185739, i: 48 })\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "create_products",
+    "command": "db.createCollection(\"products\", {\n  validator: {\n    $jsonSchema: {\n      bsonType: \"object\",\n      required: [\"maker\", \"model\", \"type\"],\n      properties: {\n        maker: { bsonType: \"string\" },\n        model: { bsonType: \"number\" },\n        type:  { enum: [\"pc\", \"laptop\", \"printer\"] },\n        price: { bsonType: \"number\", minimum: 0 },\n        specs: { bsonType: \"object\" }\n      }\n    }\n  }\n})",
+    "output": "{ ok: 1 }",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "zone_add",
+    "command": "sh.addShardToZone(\"shard1rs\", \"NSX_A_D\");\nsh.addShardToZone(\"shard2rs\", \"NSX_E_H\")",
+    "output": "{\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185739, i: 55 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185739, i: 55 })\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "zone_range1",
+    "command": "sh.updateZoneKeyRange(\n  \"QLThietBi.products\",\n  { maker: MinKey, model: MinKey },\n  { maker: \"E\", model: MinKey },\n  \"NSX_A_D\"\n)",
+    "output": "{\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185739, i: 56 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185739, i: 56 })\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "zone_range2",
+    "command": "sh.updateZoneKeyRange(\n  \"QLThietBi.products\",\n  { maker: \"E\", model: MinKey },\n  { maker: MaxKey, model: MaxKey },\n  \"NSX_E_H\"\n)",
+    "output": "{\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185739, i: 57 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185739, i: 57 })\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "shard_index",
+    "command": "db.products.createIndex({ maker: 1, model: 1 }, { unique: true, name: \"uq_maker_model\" })",
+    "output": "uq_maker_model",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "shard_collection",
+    "command": "sh.shardCollection(\"QLThietBi.products\", { maker: 1, model: 1 }, true)",
+    "output": "{\n  collectionsharded: 'QLThietBi.products',\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185740, i: 49 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185740, i: 49 })\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "insert_products",
+    "command": "db.products.insertMany([\n  { maker: \"A\", model: 1001, type: \"pc\" },\n  { maker: \"A\", model: 1002, type: \"pc\" },\n  { maker: \"A\", model: 1003, type: \"pc\" },\n  { maker: \"A\", model: 2004, type: \"laptop\", specs: { speed: 2.00, ram: 512,  hd: 60,  screen: 13.3 }, price: 1150 },\n  { maker: \"A\", model: 2005, type: \"laptop\", specs: { speed: 2.16, ram: 1024, hd: 120, screen: 17.0 }, price: 2500 },\n  { maker: \"A\", model: 2006, type: \"laptop\", specs: { speed: 2.00, ram: 2048, hd: 80,  screen: 15.4 }, price: 1700 },\n  { maker: \"B\", model: 1004, type: \"pc\" },\n  { maker: \"B\", model: 1005, type: \"pc\" },\n  { maker: \"B\", model: 1006, type: \"pc\" },\n  { maker: \"B\", model: 2007, type: \"laptop\", specs: { speed: 1.83, ram: 1024, hd: 120, screen: 13.3 }, price: 1429 },\n  { maker: \"C\", model: 1007, type: \"pc\" },\n  { maker: \"D\", model: 1008, type: \"pc\" },\n  { maker: \"D\", model: 1009, type: \"pc\" },\n  { maker: \"D\", model: 1010, type: \"pc\" },\n  { maker: \"D\", model: 3004, type: \"printer\", specs: { color: true,  type: \"ink-jet\" }, price: 120 },\n  { maker: \"D\", model: 3005, type: \"printer\", specs: { color: false, type: \"laser\" },   price: 120 },\n  { maker: \"E\", model: 1011, type: \"pc\" },\n  { maker: \"E\", model: 1012, type: \"pc\" },\n  { maker: \"E\", model: 1013, type: \"pc\" },\n  { maker: \"E\", model: 2001, type: \"laptop\", specs: { speed: 2.00, ram: 2048, hd: 240, screen: 20.1 }, price: 3673 },\n  { maker: \"E\", model: 2002, type: \"laptop\", specs: { speed: 1.73, ram: 1024, hd: 80,  screen: 17.0 }, price: 949 },\n  { maker: \"E\", model: 2003, type: \"laptop\", specs: { speed: 1.80, ram: 512,  hd: 60,  screen: 15.4 }, price: 549 },\n  { maker: \"E\", model: 3001, type: \"printer\", specs: { color: true,  type: \"ink-jet\" }, price: 99 },\n  { maker: \"E\", model: 3002, type: \"printer\", specs: { color: false, type: \"laser\" },   price: 239 },\n  { maker: \"E\", model: 3003, type: \"printer\", specs: { color: true,  type: \"laser\" },   price: 899 },\n  { maker: \"F\", model: 2008, type: \"laptop\", specs: { speed: 1.60, ram: 1024, hd: 100, screen: 15.4 }, price: 900 },\n  { maker: \"F\", model: 2009, type: \"laptop\", specs: { speed: 1.60, ram: 512,  hd: 80,  screen: 14.1 }, price: 680 },\n  { maker: \"G\", model: 2010, type: \"laptop\", specs: { speed: 2.00, ram: 2048, hd: 160, screen: 15.4 }, price: 2300 },\n  { maker: \"H\", model: 3006, type: \"printer\", specs: { color: true,  type: \"ink-jet\" }, price: 100 },\n  { maker: \"H\", model: 3007, type: \"printer\", specs: { color: true,  type: \"laser\" },   price: 200 }\n])",
+    "output": "{\n  acknowledged: true,\n  insertedIds: {\n    '0': ObjectId('6ac3534c7d97f77dcd702a54'),\n    '1': ObjectId('6ac3534c7d97f77dcd702a55'),\n    '2': ObjectId('6ac3534c7d97f77dcd702a56'),\n    '3': ObjectId('6ac3534c7d97f77dcd702a57'),\n    '4': ObjectId('6ac3534c7d97f77dcd702a58'),\n    '5': ObjectId('6ac3534c7d97f77dcd702a59'),\n    '6': ObjectId('6ac3534c7d97f77dcd702a5a'),\n    '7': ObjectId('6ac3534c7d97f77dcd702a5b'),\n    '8': ObjectId('6ac3534c7d97f77dcd702a5c'),\n    '9': ObjectId('6ac3534c7d97f77dcd702a5d'),\n    '10': ObjectId('6ac3534c7d97f77dcd702a5e'),\n    '11': ObjectId('6ac3534c7d97f77dcd702a5f'),\n    '12': ObjectId('6ac3534c7d97f77dcd702a60'),\n    '13': ObjectId('6ac3534c7d97f77dcd702a61'),\n    '14': ObjectId('6ac3534c7d97f77dcd702a62'),\n    '15': ObjectId('6ac3534c7d97f77dcd702a63'),\n    '16': ObjectId('6ac3534c7d97f77dcd702a64'),\n    '17': ObjectId('6ac3534c7d97f77dcd702a65'),\n    '18': ObjectId('6ac3534c7d97f77dcd702a66'),\n    '19': ObjectId('6ac3534c7d97f77dcd702a67'),\n    '20': ObjectId('6ac3534c7d97f77dcd702a68'),\n    '21': ObjectId('6ac3534c7d97f77dcd702a69'),\n    '22': ObjectId('6ac3534c7d97f77dcd702a6a'),\n    '23': ObjectId('6ac3534c7d97f77dcd702a6b'),\n    '24': ObjectId('6ac3534c7d97f77dcd702a6c'),\n    '25': ObjectId('6ac3534c7d97f77dcd702a6d'),\n    '26': ObjectId('6ac3534c7d97f77dcd702a6e'),\n    '27': ObjectId('6ac3534c7d97f77dcd702a6f'),\n    '28': ObjectId('6ac3534c7d97f77dcd702a70'),\n    '29': ObjectId('6ac3534c7d97f77dcd702a71')\n  }\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "build_makers",
+    "command": "db.products.aggregate([\n  { $sort: { model: 1 } },\n  { $group: { _id: \"$maker\", products: { $push: { model: \"$model\", type: \"$type\" } } } },\n  { $sort: { _id: 1 } },\n  { $out: \"makers\" }\n])",
+    "output": "",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "counts",
+    "command": "({ products: db.products.countDocuments(), makers: db.makers.countDocuments() })",
+    "output": "{ products: 30, makers: 8 }",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "verify_sum",
+    "command": "db.products.aggregate([\n  { $group: { _id: \"$type\", soLuong: { $sum: 1 }, tongGia: { $sum: \"$price\" } } },\n  { $sort: { _id: 1 } }\n])",
+    "output": "[\n  { _id: 'laptop', soLuong: 10, tongGia: 15830 },\n  { _id: 'pc', soLuong: 13, tongGia: 0 },\n  { _id: 'printer', soLuong: 7, tongGia: 1777 }\n]",
+    "prompt": "[direct: mongos] QLThietBi>"
+   }
+  ],
+  "raw": "[direct: mongos] test> @@STEP:add_shard1@@\n\n[direct: mongos] test> {\n  shardAdded: 'shard1rs',\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185739, i: 20 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185739, i: 20 })\n}\n[direct: mongos] test> @@STEP:add_shard2@@\n\n[direct: mongos] test> {\n  shardAdded: 'shard2rs',\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185739, i: 43 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185739, i: 37 })\n}\n[direct: mongos] test> @@STEP:list_shards@@\n\n[direct: mongos] test> [\n  {\n    _id: 'shard1rs',\n    host: 'shard1rs/shard1a:27018,shard1b:27018,shard1c:27018',\n    state: 1\n  },\n  {\n    _id: 'shard2rs',\n    host: 'shard2rs/shard2a:27018,shard2b:27018,shard2c:27018',\n    state: 1\n  }\n]\n[direct: mongos] test> @@STEP:use_db@@\n\n[direct: mongos] test> switched to db QLThietBi\n[direct: mongos] QLThietBi> @@STEP:enable_sharding@@\n\n[direct: mongos] QLThietBi> {\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185739, i: 51 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185739, i: 48 })\n}\n[direct: mongos] QLThietBi> @@STEP:create_products@@\n\n[direct: mongos] QLThietBi> { ok: 1 }\n[direct: mongos] QLThietBi> @@STEP:zone_add@@\n\n[direct: mongos] QLThietBi> {\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185739, i: 55 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185739, i: 55 })\n}\n[direct: mongos] QLThietBi> @@STEP:zone_range1@@\n\n[direct: mongos] QLThietBi> {\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185739, i: 56 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185739, i: 56 })\n}\n[direct: mongos] QLThietBi> @@STEP:zone_range2@@\n\n[direct: mongos] QLThietBi> {\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185739, i: 57 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185739, i: 57 })\n}\n[direct: mongos] QLThietBi> @@STEP:shard_index@@\n\n[direct: mongos] QLThietBi> uq_maker_model\n[direct: mongos] QLThietBi> @@STEP:shard_collection@@\n\n[direct: mongos] QLThietBi> {\n  collectionsharded: 'QLThietBi.products',\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185740, i: 49 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185740, i: 49 })\n}\n[direct: mongos] QLThietBi> @@STEP:insert_products@@\n\n[direct: mongos] QLThietBi> {\n  acknowledged: true,\n  insertedIds: {\n    '0': ObjectId('6ac3534c7d97f77dcd702a54'),\n    '1': ObjectId('6ac3534c7d97f77dcd702a55'),\n    '2': ObjectId('6ac3534c7d97f77dcd702a56'),\n    '3': ObjectId('6ac3534c7d97f77dcd702a57'),\n    '4': ObjectId('6ac3534c7d97f77dcd702a58'),\n    '5': ObjectId('6ac3534c7d97f77dcd702a59'),\n    '6': ObjectId('6ac3534c7d97f77dcd702a5a'),\n    '7': ObjectId('6ac3534c7d97f77dcd702a5b'),\n    '8': ObjectId('6ac3534c7d97f77dcd702a5c'),\n    '9': ObjectId('6ac3534c7d97f77dcd702a5d'),\n    '10': ObjectId('6ac3534c7d97f77dcd702a5e'),\n    '11': ObjectId('6ac3534c7d97f77dcd702a5f'),\n    '12': ObjectId('6ac3534c7d97f77dcd702a60'),\n    '13': ObjectId('6ac3534c7d97f77dcd702a61'),\n    '14': ObjectId('6ac3534c7d97f77dcd702a62'),\n    '15': ObjectId('6ac3534c7d97f77dcd702a63'),\n    '16': ObjectId('6ac3534c7d97f77dcd702a64'),\n    '17': ObjectId('6ac3534c7d97f77dcd702a65'),\n    '18': ObjectId('6ac3534c7d97f77dcd702a66'),\n    '19': ObjectId('6ac3534c7d97f77dcd702a67'),\n    '20': ObjectId('6ac3534c7d97f77dcd702a68'),\n    '21': ObjectId('6ac3534c7d97f77dcd702a69'),\n    '22': ObjectId('6ac3534c7d97f77dcd702a6a'),\n    '23': ObjectId('6ac3534c7d97f77dcd702a6b'),\n    '24': ObjectId('6ac3534c7d97f77dcd702a6c'),\n    '25': ObjectId('6ac3534c7d97f77dcd702a6d'),\n    '26': ObjectId('6ac3534c7d97f77dcd702a6e'),\n    '27': ObjectId('6ac3534c7d97f77dcd702a6f'),\n    '28': ObjectId('6ac3534c7d97f77dcd702a70'),\n    '29': ObjectId('6ac3534c7d97f77dcd702a71')\n  }\n}\n[direct: mongos] QLThietBi> @@STEP:build_makers@@\n\n[direct: mongos] QLThietBi> \n[direct: mongos] QLThietBi> @@STEP:counts@@\n\n[direct: mongos] QLThietBi> { products: 30, makers: 8 }\n[direct: mongos] QLThietBi> @@STEP:verify_sum@@\n\n[direct: mongos] QLThietBi> [\n  { _id: 'laptop', soLuong: 10, tongGia: 15830 },\n  { _id: 'pc', soLuong: 13, tongGia: 0 },\n  { _id: 'printer', soLuong: 7, tongGia: 1777 }\n]\n[direct: mongos] QLThietBi> @@STEP:__end__@@\n\n[direct: mongos] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "mongos_check",
+  "container": "mongos",
+  "uri": "mongodb://mongos:27017/QLThietBi",
+  "steps": [
+   {
+    "id": "_wait_balancer",
+    "command": "sleep(5000)",
+    "output": "",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "shard_distribution",
+    "command": "db.products.getShardDistribution()",
+    "output": "Shard shard2rs at shard2rs/shard2a:27018,shard2b:27018,shard2c:27018\n{\n  data: '1KiB',\n  docs: 14,\n  chunks: 1,\n  'estimated data per chunk': '1KiB',\n  'estimated docs per chunk': 14\n}\n---\nShard shard1rs at shard1rs/shard1a:27018,shard1b:27018,shard1c:27018\n{\n  data: '1KiB',\n  docs: 16,\n  chunks: 1,\n  'estimated data per chunk': '1KiB',\n  'estimated docs per chunk': 16\n}\n---\nTotals\n{\n  data: '2KiB',\n  docs: 30,\n  chunks: 2,\n  'Shard shard2rs': [\n    '53.31 % data',\n    '46.66 % docs in cluster',\n    '109B avg obj size on shard'\n  ],\n  'Shard shard1rs': [\n    '46.68 % data',\n    '53.33 % docs in cluster',\n    '83B avg obj size on shard'\n  ]\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "sharded_data_distribution",
+    "command": "db.getSiblingDB(\"admin\").aggregate([\n  { $shardedDataDistribution: {} },\n  { $match: { ns: \"QLThietBi.products\" } }\n]).toArray()[0].shards",
+    "output": "[\n  {\n    shardName: 'shard1rs',\n    numOrphanedDocs: 0,\n    numOwnedDocuments: 16,\n    ownedSizeBytes: 1328,\n    orphanedSizeBytes: 0\n  },\n  {\n    shardName: 'shard2rs',\n    numOrphanedDocs: 0,\n    numOwnedDocuments: 14,\n    ownedSizeBytes: 1526,\n    orphanedSizeBytes: 0\n  }\n]",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "chunks",
+    "command": "db.getSiblingDB(\"config\").chunks.find(\n  { uuid: db.getSiblingDB(\"config\").collections.findOne({ _id: \"QLThietBi.products\" }).uuid },\n  { _id: 0, min: 1, max: 1, shard: 1 }\n).sort({ min: 1 })",
+    "output": "[\n  {\n    min: { maker: MinKey(), model: MinKey() },\n    max: { maker: 'E', model: MinKey() },\n    shard: 'shard1rs'\n  },\n  {\n    min: { maker: 'E', model: MinKey() },\n    max: { maker: MaxKey(), model: MaxKey() },\n    shard: 'shard2rs'\n  }\n]",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "zones_list",
+    "command": "db.getSiblingDB(\"config\").tags.find({}, { _id: 0, ns: 1, min: 1, max: 1, tag: 1 })",
+    "output": "[\n  {\n    ns: 'QLThietBi.products',\n    min: { maker: MinKey(), model: MinKey() },\n    max: { maker: 'E', model: MinKey() },\n    tag: 'NSX_A_D'\n  },\n  {\n    ns: 'QLThietBi.products',\n    min: { maker: 'E', model: MinKey() },\n    max: { maker: MaxKey(), model: MaxKey() },\n    tag: 'NSX_E_H'\n  }\n]",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "balancer_state",
+    "command": "({ balancerEnabled: sh.getBalancerState(), balancerRunning: sh.isBalancerRunning().mode })",
+    "output": "{ balancerEnabled: true, balancerRunning: 'full' }",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "makers_location",
+    "command": "db.getSiblingDB(\"config\").databases.findOne({ _id: \"QLThietBi\" }, { _id: 1, primary: 1 })",
+    "output": "{ _id: 'QLThietBi', primary: 'shard1rs' }",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "sh_status",
+    "command": "sh.status()",
+    "output": "shardingVersion\n{ _id: 1, clusterId: ObjectId('6ac3533688efaacf1ae67c74') }\n---\nshards\n[\n  {\n    _id: 'shard1rs',\n    host: 'shard1rs/shard1a:27018,shard1b:27018,shard1c:27018',\n    state: 1,\n    topologyTime: Timestamp({ t: 1791185739, i: 10 }),\n    replSetConfigVersion: Long('-1'),\n    tags: [ 'NSX_A_D' ]\n  },\n  {\n    _id: 'shard2rs',\n    host: 'shard2rs/shard2a:27018,shard2b:27018,shard2c:27018',\n    state: 1,\n    topologyTime: Timestamp({ t: 1791185739, i: 28 }),\n    replSetConfigVersion: Long('-1'),\n    tags: [ 'NSX_E_H' ]\n  }\n]\n---\nactive mongoses\n[ { '8.0.32': 1 } ]\n---\nautosplit\n{ 'Currently enabled': 'yes' }\n---\nbalancer\n{\n  'Currently enabled': 'yes',\n  'Currently running': 'no',\n  'Failed balancer rounds in last 5 attempts': 0,\n  'Migration Results for the last 24 hours': 'No recent migrations'\n}\n---\nshardedDataDistribution\n[\n  {\n    ns: 'QLThietBi.products',\n    shards: [\n      {\n        shardName: 'shard1rs',\n        numOrphanedDocs: 0,\n        numOwnedDocuments: 16,\n        ownedSizeBytes: 1328,\n        orphanedSizeBytes: 0\n      },\n      {\n        shardName: 'shard2rs',\n        numOrphanedDocs: 0,\n        numOwnedDocuments: 14,\n        ownedSizeBytes: 1526,\n        orphanedSizeBytes: 0\n      }\n    ]\n  }\n]\n---\ndatabases\n[\n  {\n    database: { _id: 'config', primary: 'config', partitioned: true },\n    collections: {}\n  },\n  {\n    database: {\n      _id: 'QLThietBi',\n      primary: 'shard1rs',\n      version: {\n        uuid: UUID('7f1b7734-09cd-4df8-b22a-f03bf6dee5ab'),\n        timestamp: Timestamp({ t: 1791185739, i: 45 }),\n        lastMod: 1\n      }\n    },\n    collections: {\n      'QLThietBi.products': {\n        shardKey: { maker: 1, model: 1 },\n        unique: true,\n        balancing: true,\n        allowMigrations: true,\n        chunkMetadata: [\n          { shard: 'shard1rs', nChunks: 1 },\n          { shard: 'shard2rs', nChunks: 1 }\n        ],\n        chunks: [\n          { min: { maker: MinKey(), model: MinKey() }, max: { maker: 'E', model: MinKey() }, 'on shard': 'shard1rs', 'last modified': Timestamp({ t: 1, i: 0 }) },\n          { min: { maker: 'E', model: MinKey() }, max: { maker: MaxKey(), model: MaxKey() }, 'on shard': 'shard2rs', 'last modified': Timestamp({ t: 1, i: 1 }) }\n        ],\n        tags: [\n          {\n            tag: 'NSX_A_D',\n            min: { maker: MinKey(), model: MinKey() },\n            max: { maker: 'E', model: MinKey() }\n          },\n          {\n            tag: 'NSX_E_H',\n            min: { maker: 'E', model: MinKey() },\n            max: { maker: MaxKey(), model: MaxKey() }\n          }\n        ]\n      }\n    }\n  }\n]",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "explain_maker_A",
+    "command": "(e => ({\n  stage: e.queryPlanner.winningPlan.stage,\n  shards: e.queryPlanner.winningPlan.shards.map(s => ({ shard: s.shardName, plan: s.winningPlan.stage + \" <- \" + (s.winningPlan.inputStage ? s.winningPlan.inputStage.stage : \"\") })),\n  nReturned: e.executionStats.nReturned\n}))(db.products.find({ maker: \"A\" }).explain(\"executionStats\"))",
+    "output": "{\n  stage: 'SINGLE_SHARD',\n  shards: [ { shard: 'shard1rs', plan: 'FETCH <- SHARDING_FILTER' } ],\n  nReturned: 6\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "explain_maker_model",
+    "command": "(e => ({\n  stage: e.queryPlanner.winningPlan.stage,\n  shards: e.queryPlanner.winningPlan.shards.map(s => s.shardName),\n  nReturned: e.executionStats.nReturned\n}))(db.products.find({ maker: \"E\", model: 2001 }).explain(\"executionStats\"))",
+    "output": "{ stage: 'SINGLE_SHARD', shards: [ 'shard2rs' ], nReturned: 1 }",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "explain_type",
+    "command": "(e => ({\n  stage: e.queryPlanner.winningPlan.stage,\n  shards: e.queryPlanner.winningPlan.shards.map(s => s.shardName),\n  nReturned: e.executionStats.nReturned,\n  nReturnedPerShard: e.executionStats.executionStages.shards.map(s => ({ shard: s.shardName, n: s.nReturned }))\n}))(db.products.find({ type: \"laptop\" }).explain(\"executionStats\"))",
+    "output": "{\n  stage: 'SHARD_MERGE',\n  shards: [ 'shard1rs', 'shard2rs' ],\n  nReturned: 10,\n  nReturnedPerShard: [ { shard: 'shard1rs', n: 4 }, { shard: 'shard2rs', n: 6 } ]\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "explain_range",
+    "command": "(e => ({\n  stage: e.queryPlanner.winningPlan.stage,\n  shards: e.queryPlanner.winningPlan.shards.map(s => s.shardName),\n  nReturned: e.executionStats.nReturned\n}))(db.products.find({ maker: { $in: [\"F\", \"G\", \"H\"] } }).explain(\"executionStats\"))",
+    "output": "{ stage: 'SINGLE_SHARD', shards: [ 'shard2rs' ], nReturned: 5 }",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "explain_model_only",
+    "command": "(e => ({\n  stage: e.queryPlanner.winningPlan.stage,\n  shards: e.queryPlanner.winningPlan.shards.map(s => s.shardName),\n  nReturned: e.executionStats.nReturned\n}))(db.products.find({ model: 2001 }).explain(\"executionStats\"))",
+    "output": "{\n  stage: 'SHARD_MERGE',\n  shards: [ 'shard2rs', 'shard1rs' ],\n  nReturned: 1\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "agg_via_mongos",
+    "command": "db.products.aggregate([\n  { $group: { _id: \"$maker\", soSanPham: { $sum: 1 } } },\n  { $sort: { _id: 1 } }\n])",
+    "output": "[\n  { _id: 'A', soSanPham: 6 },\n  { _id: 'B', soSanPham: 4 },\n  { _id: 'C', soSanPham: 1 },\n  { _id: 'D', soSanPham: 5 },\n  { _id: 'E', soSanPham: 9 },\n  { _id: 'F', soSanPham: 2 },\n  { _id: 'G', soSanPham: 1 },\n  { _id: 'H', soSanPham: 2 }\n]",
+    "prompt": "[direct: mongos] QLThietBi>"
+   }
+  ],
+  "raw": "[direct: mongos] QLThietBi> @@STEP:_wait_balancer@@\n\n[direct: mongos] QLThietBi> \n[direct: mongos] QLThietBi> @@STEP:shard_distribution@@\n\n[direct: mongos] QLThietBi> Shard shard2rs at shard2rs/shard2a:27018,shard2b:27018,shard2c:27018\n{\n  data: '1KiB',\n  docs: 14,\n  chunks: 1,\n  'estimated data per chunk': '1KiB',\n  'estimated docs per chunk': 14\n}\n---\nShard shard1rs at shard1rs/shard1a:27018,shard1b:27018,shard1c:27018\n{\n  data: '1KiB',\n  docs: 16,\n  chunks: 1,\n  'estimated data per chunk': '1KiB',\n  'estimated docs per chunk': 16\n}\n---\nTotals\n{\n  data: '2KiB',\n  docs: 30,\n  chunks: 2,\n  'Shard shard2rs': [\n    '53.31 % data',\n    '46.66 % docs in cluster',\n    '109B avg obj size on shard'\n  ],\n  'Shard shard1rs': [\n    '46.68 % data',\n    '53.33 % docs in cluster',\n    '83B avg obj size on shard'\n  ]\n}\n[direct: mongos] QLThietBi> @@STEP:sharded_data_distribution@@\n\n[direct: mongos] QLThietBi> [\n  {\n    shardName: 'shard1rs',\n    numOrphanedDocs: 0,\n    numOwnedDocuments: 16,\n    ownedSizeBytes: 1328,\n    orphanedSizeBytes: 0\n  },\n  {\n    shardName: 'shard2rs',\n    numOrphanedDocs: 0,\n    numOwnedDocuments: 14,\n    ownedSizeBytes: 1526,\n    orphanedSizeBytes: 0\n  }\n]\n[direct: mongos] QLThietBi> @@STEP:chunks@@\n\n[direct: mongos] QLThietBi> [\n  {\n    min: { maker: MinKey(), model: MinKey() },\n    max: { maker: 'E', model: MinKey() },\n    shard: 'shard1rs'\n  },\n  {\n    min: { maker: 'E', model: MinKey() },\n    max: { maker: MaxKey(), model: MaxKey() },\n    shard: 'shard2rs'\n  }\n]\n[direct: mongos] QLThietBi> @@STEP:zones_list@@\n\n[direct: mongos] QLThietBi> [\n  {\n    ns: 'QLThietBi.products',\n    min: { maker: MinKey(), model: MinKey() },\n    max: { maker: 'E', model: MinKey() },\n    tag: 'NSX_A_D'\n  },\n  {\n    ns: 'QLThietBi.products',\n    min: { maker: 'E', model: MinKey() },\n    max: { maker: MaxKey(), model: MaxKey() },\n    tag: 'NSX_E_H'\n  }\n]\n[direct: mongos] QLThietBi> @@STEP:balancer_state@@\n\n[direct: mongos] QLThietBi> { balancerEnabled: true, balancerRunning: 'full' }\n[direct: mongos] QLThietBi> @@STEP:makers_location@@\n\n[direct: mongos] QLThietBi> { _id: 'QLThietBi', primary: 'shard1rs' }\n[direct: mongos] QLThietBi> @@STEP:sh_status@@\n\n[direct: mongos] QLThietBi> shardingVersion\n{ _id: 1, clusterId: ObjectId('6ac3533688efaacf1ae67c74') }\n---\nshards\n[\n  {\n    _id: 'shard1rs',\n    host: 'shard1rs/shard1a:27018,shard1b:27018,shard1c:27018',\n    state: 1,\n    topologyTime: Timestamp({ t: 1791185739, i: 10 }),\n    replSetConfigVersion: Long('-1'),\n    tags: [ 'NSX_A_D' ]\n  },\n  {\n    _id: 'shard2rs',\n    host: 'shard2rs/shard2a:27018,shard2b:27018,shard2c:27018',\n    state: 1,\n    topologyTime: Timestamp({ t: 1791185739, i: 28 }),\n    replSetConfigVersion: Long('-1'),\n    tags: [ 'NSX_E_H' ]\n  }\n]\n---\nactive mongoses\n[ { '8.0.32': 1 } ]\n---\nautosplit\n{ 'Currently enabled': 'yes' }\n---\nbalancer\n{\n  'Currently enabled': 'yes',\n  'Currently running': 'no',\n  'Failed balancer rounds in last 5 attempts': 0,\n  'Migration Results for the last 24 hours': 'No recent migrations'\n}\n---\nshardedDataDistribution\n[\n  {\n    ns: 'QLThietBi.products',\n    shards: [\n      {\n        shardName: 'shard1rs',\n        numOrphanedDocs: 0,\n        numOwnedDocuments: 16,\n        ownedSizeBytes: 1328,\n        orphanedSizeBytes: 0\n      },\n      {\n        shardName: 'shard2rs',\n        numOrphanedDocs: 0,\n        numOwnedDocuments: 14,\n        ownedSizeBytes: 1526,\n        orphanedSizeBytes: 0\n      }\n    ]\n  }\n]\n---\ndatabases\n[\n  {\n    database: { _id: 'config', primary: 'config', partitioned: true },\n    collections: {}\n  },\n  {\n    database: {\n      _id: 'QLThietBi',\n      primary: 'shard1rs',\n      version: {\n        uuid: UUID('7f1b7734-09cd-4df8-b22a-f03bf6dee5ab'),\n        timestamp: Timestamp({ t: 1791185739, i: 45 }),\n        lastMod: 1\n      }\n    },\n    collections: {\n      'QLThietBi.products': {\n        shardKey: { maker: 1, model: 1 },\n        unique: true,\n        balancing: true,\n        allowMigrations: true,\n        chunkMetadata: [\n          { shard: 'shard1rs', nChunks: 1 },\n          { shard: 'shard2rs', nChunks: 1 }\n        ],\n        chunks: [\n          { min: { maker: MinKey(), model: MinKey() }, max: { maker: 'E', model: MinKey() }, 'on shard': 'shard1rs', 'last modified': Timestamp({ t: 1, i: 0 }) },\n          { min: { maker: 'E', model: MinKey() }, max: { maker: MaxKey(), model: MaxKey() }, 'on shard': 'shard2rs', 'last modified': Timestamp({ t: 1, i: 1 }) }\n        ],\n        tags: [\n          {\n            tag: 'NSX_A_D',\n            min: { maker: MinKey(), model: MinKey() },\n            max: { maker: 'E', model: MinKey() }\n          },\n          {\n            tag: 'NSX_E_H',\n            min: { maker: 'E', model: MinKey() },\n            max: { maker: MaxKey(), model: MaxKey() }\n          }\n        ]\n      }\n    }\n  }\n]\n[direct: mongos] QLThietBi> @@STEP:explain_maker_A@@\n\n[direct: mongos] QLThietBi> {\n  stage: 'SINGLE_SHARD',\n  shards: [ { shard: 'shard1rs', plan: 'FETCH <- SHARDING_FILTER' } ],\n  nReturned: 6\n}\n[direct: mongos] QLThietBi> @@STEP:explain_maker_model@@\n\n[direct: mongos] QLThietBi> { stage: 'SINGLE_SHARD', shards: [ 'shard2rs' ], nReturned: 1 }\n[direct: mongos] QLThietBi> @@STEP:explain_type@@\n\n[direct: mongos] QLThietBi> {\n  stage: 'SHARD_MERGE',\n  shards: [ 'shard1rs', 'shard2rs' ],\n  nReturned: 10,\n  nReturnedPerShard: [ { shard: 'shard1rs', n: 4 }, { shard: 'shard2rs', n: 6 } ]\n}\n[direct: mongos] QLThietBi> @@STEP:explain_range@@\n\n[direct: mongos] QLThietBi> { stage: 'SINGLE_SHARD', shards: [ 'shard2rs' ], nReturned: 5 }\n[direct: mongos] QLThietBi> @@STEP:agg_via_mongos@@\n\n[direct: mongos] QLThietBi> [\n  { _id: 'A', soSanPham: 6 },\n  { _id: 'B', soSanPham: 4 },\n  { _id: 'C', soSanPham: 1 },\n  { _id: 'D', soSanPham: 5 },\n  { _id: 'E', soSanPham: 9 },\n  { _id: 'F', soSanPham: 2 },\n  { _id: 'G', soSanPham: 1 },\n  { _id: 'H', soSanPham: 2 }\n]\n[direct: mongos] QLThietBi> @@STEP:__end__@@\n\n[direct: mongos] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "shard1_a",
+  "container": "shard1a",
+  "uri": "mongodb://shard1a:27018/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "s1a_role",
+    "command": "(({ setName, me, isWritablePrimary }) => ({ setName, me, isWritablePrimary }))(db.hello())",
+    "output": "{ setName: 'shard1rs', me: 'shard1a:27018', isWritablePrimary: true }",
+    "prompt": "shard1rs [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "s1a_count",
+    "command": "db.products.aggregate([{ $group: { _id: \"$maker\", n: { $sum: 1 } } }, { $sort: { _id: 1 } }]).toArray()",
+    "output": "[\n  { _id: 'A', n: 6 },\n  { _id: 'B', n: 4 },\n  { _id: 'C', n: 1 },\n  { _id: 'D', n: 5 }\n]",
+    "prompt": "shard1rs [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "s1a_total",
+    "command": "({ products: db.products.countDocuments(), makers: db.makers.countDocuments() })",
+    "output": "{ products: 16, makers: 8 }",
+    "prompt": "shard1rs [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "s1a_hash",
+    "command": "db.runCommand({ dbHash: 1, collections: [\"products\", \"makers\"] }).collections",
+    "output": "{\n  makers: 'd5370fd06a542c1d77000b1c90b07829',\n  products: '379c70fa218153278358b59086730c30'\n}",
+    "prompt": "shard1rs [direct: primary] QLThietBi>"
+   }
+  ],
+  "raw": "shard1rs [direct: primary] QLThietBi> @@STEP:s1a_role@@\n\nshard1rs [direct: primary] QLThietBi> { setName: 'shard1rs', me: 'shard1a:27018', isWritablePrimary: true }\nshard1rs [direct: primary] QLThietBi> @@STEP:s1a_count@@\n\nshard1rs [direct: primary] QLThietBi> [\n  { _id: 'A', n: 6 },\n  { _id: 'B', n: 4 },\n  { _id: 'C', n: 1 },\n  { _id: 'D', n: 5 }\n]\nshard1rs [direct: primary] QLThietBi> @@STEP:s1a_total@@\n\nshard1rs [direct: primary] QLThietBi> { products: 16, makers: 8 }\nshard1rs [direct: primary] QLThietBi> @@STEP:s1a_hash@@\n\nshard1rs [direct: primary] QLThietBi> {\n  makers: 'd5370fd06a542c1d77000b1c90b07829',\n  products: '379c70fa218153278358b59086730c30'\n}\nshard1rs [direct: primary] QLThietBi> @@STEP:__end__@@\n\nshard1rs [direct: primary] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "shard1_b",
+  "container": "shard1b",
+  "uri": "mongodb://shard1b:27018/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "s1b_role",
+    "command": "(({ setName, me, isWritablePrimary, secondary }) => ({ setName, me, isWritablePrimary, secondary }))(db.hello())",
+    "output": "{\n  setName: 'shard1rs',\n  me: 'shard1b:27018',\n  isWritablePrimary: false,\n  secondary: true\n}",
+    "prompt": "shard1rs [direct: secondary] QLThietBi>"
+   },
+   {
+    "id": "s1b_total",
+    "command": "({ products: db.products.countDocuments(), makers: db.makers.countDocuments() })",
+    "output": "{ products: 16, makers: 8 }",
+    "prompt": "shard1rs [direct: secondary] QLThietBi>"
+   },
+   {
+    "id": "s1b_hash",
+    "command": "db.runCommand({ dbHash: 1, collections: [\"products\", \"makers\"] }).collections",
+    "output": "{\n  makers: 'd5370fd06a542c1d77000b1c90b07829',\n  products: '379c70fa218153278358b59086730c30'\n}",
+    "prompt": "shard1rs [direct: secondary] QLThietBi>"
+   }
+  ],
+  "raw": "shard1rs [direct: secondary] QLThietBi> @@STEP:s1b_role@@\n\nshard1rs [direct: secondary] QLThietBi> {\n  setName: 'shard1rs',\n  me: 'shard1b:27018',\n  isWritablePrimary: false,\n  secondary: true\n}\nshard1rs [direct: secondary] QLThietBi> @@STEP:s1b_total@@\n\nshard1rs [direct: secondary] QLThietBi> { products: 16, makers: 8 }\nshard1rs [direct: secondary] QLThietBi> @@STEP:s1b_hash@@\n\nshard1rs [direct: secondary] QLThietBi> {\n  makers: 'd5370fd06a542c1d77000b1c90b07829',\n  products: '379c70fa218153278358b59086730c30'\n}\nshard1rs [direct: secondary] QLThietBi> @@STEP:__end__@@\n\nshard1rs [direct: secondary] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "shard1_c",
+  "container": "shard1c",
+  "uri": "mongodb://shard1c:27018/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "s1c_total",
+    "command": "({ products: db.products.countDocuments(), makers: db.makers.countDocuments() })",
+    "output": "{ products: 16, makers: 8 }",
+    "prompt": "shard1rs [direct: secondary] QLThietBi>"
+   },
+   {
+    "id": "s1c_hash",
+    "command": "db.runCommand({ dbHash: 1, collections: [\"products\", \"makers\"] }).collections",
+    "output": "{\n  makers: 'd5370fd06a542c1d77000b1c90b07829',\n  products: '379c70fa218153278358b59086730c30'\n}",
+    "prompt": "shard1rs [direct: secondary] QLThietBi>"
+   }
+  ],
+  "raw": "shard1rs [direct: secondary] QLThietBi> @@STEP:s1c_total@@\n\nshard1rs [direct: secondary] QLThietBi> { products: 16, makers: 8 }\nshard1rs [direct: secondary] QLThietBi> @@STEP:s1c_hash@@\n\nshard1rs [direct: secondary] QLThietBi> {\n  makers: 'd5370fd06a542c1d77000b1c90b07829',\n  products: '379c70fa218153278358b59086730c30'\n}\nshard1rs [direct: secondary] QLThietBi> @@STEP:__end__@@\n\nshard1rs [direct: secondary] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "shard2_a",
+  "container": "shard2a",
+  "uri": "mongodb://shard2a:27018/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "s2a_role",
+    "command": "(({ setName, me, isWritablePrimary }) => ({ setName, me, isWritablePrimary }))(db.hello())",
+    "output": "{ setName: 'shard2rs', me: 'shard2a:27018', isWritablePrimary: true }",
+    "prompt": "shard2rs [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "s2a_count",
+    "command": "db.products.aggregate([{ $group: { _id: \"$maker\", n: { $sum: 1 } } }, { $sort: { _id: 1 } }]).toArray()",
+    "output": "[\n  { _id: 'E', n: 9 },\n  { _id: 'F', n: 2 },\n  { _id: 'G', n: 1 },\n  { _id: 'H', n: 2 }\n]",
+    "prompt": "shard2rs [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "s2a_total",
+    "command": "({ products: db.products.countDocuments(), collections: db.getCollectionNames() })",
+    "output": "{ products: 14, collections: [ 'products' ] }",
+    "prompt": "shard2rs [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "s2a_hash",
+    "command": "db.runCommand({ dbHash: 1, collections: [\"products\"] }).collections",
+    "output": "{ products: '883b1a69168aa73617dfbe9da74e85a8' }",
+    "prompt": "shard2rs [direct: primary] QLThietBi>"
+   }
+  ],
+  "raw": "shard2rs [direct: primary] QLThietBi> @@STEP:s2a_role@@\n\nshard2rs [direct: primary] QLThietBi> { setName: 'shard2rs', me: 'shard2a:27018', isWritablePrimary: true }\nshard2rs [direct: primary] QLThietBi> @@STEP:s2a_count@@\n\nshard2rs [direct: primary] QLThietBi> [\n  { _id: 'E', n: 9 },\n  { _id: 'F', n: 2 },\n  { _id: 'G', n: 1 },\n  { _id: 'H', n: 2 }\n]\nshard2rs [direct: primary] QLThietBi> @@STEP:s2a_total@@\n\nshard2rs [direct: primary] QLThietBi> { products: 14, collections: [ 'products' ] }\nshard2rs [direct: primary] QLThietBi> @@STEP:s2a_hash@@\n\nshard2rs [direct: primary] QLThietBi> { products: '883b1a69168aa73617dfbe9da74e85a8' }\nshard2rs [direct: primary] QLThietBi> @@STEP:__end__@@\n\nshard2rs [direct: primary] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "shard2_b",
+  "container": "shard2b",
+  "uri": "mongodb://shard2b:27018/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "s2b_total",
+    "command": "({ products: db.products.countDocuments() })",
+    "output": "{ products: 14 }",
+    "prompt": "shard2rs [direct: secondary] QLThietBi>"
+   },
+   {
+    "id": "s2b_hash",
+    "command": "db.runCommand({ dbHash: 1, collections: [\"products\"] }).collections",
+    "output": "{ products: '883b1a69168aa73617dfbe9da74e85a8' }",
+    "prompt": "shard2rs [direct: secondary] QLThietBi>"
+   }
+  ],
+  "raw": "shard2rs [direct: secondary] QLThietBi> @@STEP:s2b_total@@\n\nshard2rs [direct: secondary] QLThietBi> { products: 14 }\nshard2rs [direct: secondary] QLThietBi> @@STEP:s2b_hash@@\n\nshard2rs [direct: secondary] QLThietBi> { products: '883b1a69168aa73617dfbe9da74e85a8' }\nshard2rs [direct: secondary] QLThietBi> @@STEP:__end__@@\n\nshard2rs [direct: secondary] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "shard2_c",
+  "container": "shard2c",
+  "uri": "mongodb://shard2c:27018/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "s2c_total",
+    "command": "({ products: db.products.countDocuments() })",
+    "output": "{ products: 14 }",
+    "prompt": "shard2rs [direct: secondary] QLThietBi>"
+   },
+   {
+    "id": "s2c_hash",
+    "command": "db.runCommand({ dbHash: 1, collections: [\"products\"] }).collections",
+    "output": "{ products: '883b1a69168aa73617dfbe9da74e85a8' }",
+    "prompt": "shard2rs [direct: secondary] QLThietBi>"
+   }
+  ],
+  "raw": "shard2rs [direct: secondary] QLThietBi> @@STEP:s2c_total@@\n\nshard2rs [direct: secondary] QLThietBi> { products: 14 }\nshard2rs [direct: secondary] QLThietBi> @@STEP:s2c_hash@@\n\nshard2rs [direct: secondary] QLThietBi> { products: '883b1a69168aa73617dfbe9da74e85a8' }\nshard2rs [direct: secondary] QLThietBi> @@STEP:__end__@@\n\nshard2rs [direct: secondary] QLThietBi> "
+ },
+ {
+  "kind": "shell",
+  "name": "shell",
+  "steps": [
+   {
+    "id": "stop_shard1a",
+    "command": "docker stop shard1a && sleep 20 && docker ps -a --filter name=shard1a --format \"{{.Names}}: {{.Status}}\"",
+    "output": "shard1a\nshard1a: Exited (137) 21 seconds ago"
+   }
+  ]
+ },
+ {
+  "kind": "mongosh",
+  "name": "mongos_ha",
+  "container": "mongos",
+  "uri": "mongodb://mongos:27017/QLThietBi",
+  "steps": [
+   {
+    "id": "ha_count",
+    "command": "({ tongSanPham: db.products.countDocuments(), sanPhamNSX_A: db.products.countDocuments({ maker: \"A\" }) })",
+    "output": "{ tongSanPham: 30, sanPhamNSX_A: 6 }",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "ha_write",
+    "command": "db.products.updateOne({ maker: \"A\", model: 2004 }, { $set: { price: 1199 } })",
+    "output": "{\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "ha_write_check",
+    "command": "db.products.findOne({ maker: \"A\", model: 2004 }, { _id: 0, maker: 1, model: 1, price: 1 })",
+    "output": "{ maker: 'A', model: 2004, price: 1199 }",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "ha_write_revert",
+    "command": "db.products.updateOne({ maker: \"A\", model: 2004 }, { $set: { price: 1150 } })",
+    "output": "{\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   }
+  ],
+  "raw": "[direct: mongos] QLThietBi> @@STEP:ha_count@@\n\n[direct: mongos] QLThietBi> { tongSanPham: 30, sanPhamNSX_A: 6 }\n[direct: mongos] QLThietBi> @@STEP:ha_write@@\n\n[direct: mongos] QLThietBi> {\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}\n[direct: mongos] QLThietBi> @@STEP:ha_write_check@@\n\n[direct: mongos] QLThietBi> { maker: 'A', model: 2004, price: 1199 }\n[direct: mongos] QLThietBi> @@STEP:ha_write_revert@@\n\n[direct: mongos] QLThietBi> {\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}\n[direct: mongos] QLThietBi> @@STEP:__end__@@\n\n[direct: mongos] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "shard1_status",
+  "container": "shard1b",
+  "uri": "mongodb://shard1b:27018/?directConnection=true",
+  "steps": [
+   {
+    "id": "ha_rs_status",
+    "command": "rs.status().members.map(m => ({ name: m.name, stateStr: m.stateStr, health: m.health }))",
+    "output": "[\n  {\n    name: 'shard1a:27018',\n    stateStr: '(not reachable/healthy)',\n    health: 0\n  },\n  { name: 'shard1b:27018', stateStr: 'PRIMARY', health: 1 },\n  { name: 'shard1c:27018', stateStr: 'SECONDARY', health: 1 }\n]",
+    "prompt": "shard1rs [direct: primary] test>"
+   }
+  ],
+  "raw": "shard1rs [direct: primary] test> @@STEP:ha_rs_status@@\n\nshard1rs [direct: primary] test> [\n  {\n    name: 'shard1a:27018',\n    stateStr: '(not reachable/healthy)',\n    health: 0\n  },\n  { name: 'shard1b:27018', stateStr: 'PRIMARY', health: 1 },\n  { name: 'shard1c:27018', stateStr: 'SECONDARY', health: 1 }\n]\nshard1rs [direct: primary] test> @@STEP:__end__@@\n\nshard1rs [direct: primary] test> "
+ },
+ {
+  "kind": "shell",
+  "name": "shell",
+  "steps": [
+   {
+    "id": "start_shard1a",
+    "command": "docker start shard1a && sleep 30 && docker ps --filter name=shard1a --format \"{{.Names}}: {{.Status}}\"",
+    "output": "shard1a\nshard1a: Up 31 seconds"
+   }
+  ]
+ },
+ {
+  "kind": "mongosh",
+  "name": "shard1_status2",
+  "container": "shard1a",
+  "uri": "mongodb://shard1a:27018/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "ha_rs_status2",
+    "command": "rs.status().members.map(m => ({ name: m.name, stateStr: m.stateStr, health: m.health }))",
+    "output": "[\n  { name: 'shard1a:27018', stateStr: 'PRIMARY', health: 1 },\n  { name: 'shard1b:27018', stateStr: 'SECONDARY', health: 1 },\n  { name: 'shard1c:27018', stateStr: 'SECONDARY', health: 1 }\n]",
+    "prompt": "shard1rs [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "ha_s1a_count",
+    "command": "db.products.findOne({ maker: \"A\", model: 2004 }, { _id: 0, maker: 1, model: 1, price: 1 })",
+    "output": "{ maker: 'A', model: 2004, price: 1150 }",
+    "prompt": "shard1rs [direct: primary] QLThietBi>"
+   }
+  ],
+  "raw": "shard1rs [direct: primary] QLThietBi> @@STEP:ha_rs_status2@@\n\nshard1rs [direct: primary] QLThietBi> [\n  { name: 'shard1a:27018', stateStr: 'PRIMARY', health: 1 },\n  { name: 'shard1b:27018', stateStr: 'SECONDARY', health: 1 },\n  { name: 'shard1c:27018', stateStr: 'SECONDARY', health: 1 }\n]\nshard1rs [direct: primary] QLThietBi> @@STEP:ha_s1a_count@@\n\nshard1rs [direct: primary] QLThietBi> { maker: 'A', model: 2004, price: 1150 }\nshard1rs [direct: primary] QLThietBi> @@STEP:__end__@@\n\nshard1rs [direct: primary] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "mongos_hashed",
+  "container": "mongos",
+  "uri": "mongodb://mongos:27017/QLThietBi",
+  "steps": [
+   {
+    "id": "hashed_shard",
+    "command": "sh.shardCollection(\"QLThietBi.products_hashed\", { model: \"hashed\" })",
+    "output": "{\n  collectionsharded: 'QLThietBi.products_hashed',\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185815, i: 49 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185815, i: 49 })\n}",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "hashed_copy",
+    "command": "db.products.aggregate([\n  { $project: { _id: 0 } },\n  { $merge: { into: \"products_hashed\" } }\n])",
+    "output": "",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "hashed_distribution",
+    "command": "db.getSiblingDB(\"admin\").aggregate([\n  { $shardedDataDistribution: {} },\n  { $match: { ns: \"QLThietBi.products_hashed\" } }\n]).toArray()[0].shards.map(s => ({ shardName: s.shardName, numOwnedDocuments: s.numOwnedDocuments }))",
+    "output": "[\n  { shardName: 'shard1rs', numOwnedDocuments: 14 },\n  { shardName: 'shard2rs', numOwnedDocuments: 16 }\n]",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "hashed_explain_maker",
+    "command": "(e => ({\n  stage: e.queryPlanner.winningPlan.stage,\n  shards: e.queryPlanner.winningPlan.shards.map(s => s.shardName)\n}))(db.products_hashed.find({ maker: \"A\" }).explain())",
+    "output": "{ stage: 'SHARD_MERGE', shards: [ 'shard1rs', 'shard2rs' ] }",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "hashed_explain_model",
+    "command": "(e => ({\n  stage: e.queryPlanner.winningPlan.stage,\n  shards: e.queryPlanner.winningPlan.shards.map(s => s.shardName)\n}))(db.products_hashed.find({ model: 2001 }).explain())",
+    "output": "{ stage: 'SINGLE_SHARD', shards: [ 'shard1rs' ] }",
+    "prompt": "[direct: mongos] QLThietBi>"
+   },
+   {
+    "id": "hashed_drop",
+    "command": "db.products_hashed.drop()",
+    "output": "true",
+    "prompt": "[direct: mongos] QLThietBi>"
+   }
+  ],
+  "raw": "[direct: mongos] QLThietBi> @@STEP:hashed_shard@@\n\n[direct: mongos] QLThietBi> {\n  collectionsharded: 'QLThietBi.products_hashed',\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185815, i: 49 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185815, i: 49 })\n}\n[direct: mongos] QLThietBi> @@STEP:hashed_copy@@\n\n[direct: mongos] QLThietBi> \n[direct: mongos] QLThietBi> @@STEP:hashed_distribution@@\n\n[direct: mongos] QLThietBi> [\n  { shardName: 'shard1rs', numOwnedDocuments: 14 },\n  { shardName: 'shard2rs', numOwnedDocuments: 16 }\n]\n[direct: mongos] QLThietBi> @@STEP:hashed_explain_maker@@\n\n[direct: mongos] QLThietBi> { stage: 'SHARD_MERGE', shards: [ 'shard1rs', 'shard2rs' ] }\n[direct: mongos] QLThietBi> @@STEP:hashed_explain_model@@\n\n[direct: mongos] QLThietBi> { stage: 'SINGLE_SHARD', shards: [ 'shard1rs' ] }\n[direct: mongos] QLThietBi> @@STEP:hashed_drop@@\n\n[direct: mongos] QLThietBi> true\n[direct: mongos] QLThietBi> @@STEP:__end__@@\n\n[direct: mongos] QLThietBi> "
+ }
+]

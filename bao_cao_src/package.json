@@ -1,0 +1,6 @@
+{
+  "name": "bao-cao-csdlnc",
+  "private": true,
+  "description": "Mã nguồn dựng quyển báo cáo tiểu luận CSDL nâng cao (docx)",
+  "dependencies": { "docx": "^9.8.1" }
+}

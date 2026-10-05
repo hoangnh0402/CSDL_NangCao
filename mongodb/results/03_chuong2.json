@@ -1,0 +1,119 @@
+[
+ {
+  "kind": "mongosh",
+  "name": "ch2",
+  "container": "mongo1",
+  "uri": "mongodb://mongo1:27017/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "yc1",
+    "command": "db.products.find(\n  { type: \"laptop\", price: { $lt: 1000 } },\n  { _id: 0, maker: 1, model: 1, \"specs.speed\": 1, \"specs.ram\": 1, \"specs.hd\": 1, price: 1 }\n).sort({ price: 1 })",
+    "output": "[\n  {\n    maker: 'E',\n    model: 2003,\n    specs: { speed: 1.8, ram: 512, hd: 60 },\n    price: 549\n  },\n  {\n    maker: 'F',\n    model: 2009,\n    specs: { speed: 1.6, ram: 512, hd: 80 },\n    price: 680\n  },\n  {\n    maker: 'F',\n    model: 2008,\n    specs: { speed: 1.6, ram: 1024, hd: 100 },\n    price: 900\n  },\n  {\n    maker: 'E',\n    model: 2002,\n    specs: { speed: 1.73, ram: 1024, hd: 80 },\n    price: 949\n  }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc2",
+    "command": "db.products.distinct(\"maker\", { type: \"laptop\", \"specs.hd\": { $gte: 100 } })",
+    "output": "[ 'A', 'B', 'E', 'F', 'G' ]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc3",
+    "command": "db.products.find(\n  { type: \"laptop\", \"specs.screen\": { $gte: 15.4 }, \"specs.ram\": { $gte: 1024 } },\n  { _id: 0, maker: 1, model: 1, \"specs.ram\": 1, \"specs.screen\": 1, price: 1 }\n).sort({ \"specs.screen\": -1, price: -1 })",
+    "output": "[\n  {\n    maker: 'E',\n    model: 2001,\n    specs: { ram: 2048, screen: 20.1 },\n    price: 3673\n  },\n  {\n    maker: 'A',\n    model: 2005,\n    specs: { ram: 1024, screen: 17 },\n    price: 2500\n  },\n  {\n    maker: 'E',\n    model: 2002,\n    specs: { ram: 1024, screen: 17 },\n    price: 949\n  },\n  {\n    maker: 'G',\n    model: 2010,\n    specs: { ram: 2048, screen: 15.4 },\n    price: 2300\n  },\n  {\n    maker: 'A',\n    model: 2006,\n    specs: { ram: 2048, screen: 15.4 },\n    price: 1700\n  },\n  {\n    maker: 'F',\n    model: 2008,\n    specs: { ram: 1024, screen: 15.4 },\n    price: 900\n  }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc4",
+    "command": "db.products.find(\n  { maker: \"E\", price: { $gte: 200, $lte: 1000 } },\n  { _id: 0, model: 1, type: 1, price: 1 }\n).sort({ price: 1 })",
+    "output": "[\n  { model: 3002, type: 'printer', price: 239 },\n  { model: 2003, type: 'laptop', price: 549 },\n  { model: 3003, type: 'printer', price: 899 },\n  { model: 2002, type: 'laptop', price: 949 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc4_count",
+    "command": "db.products.countDocuments({ maker: \"E\", price: { $gte: 200, $lte: 1000 } })",
+    "output": "4",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc5",
+    "command": "db.products.aggregate([\n  { $match: { type: \"laptop\" } },\n  { $project: {\n      _id: 0, model: 1, maker: 1,\n      tocDo: \"$specs.speed\",\n      ramGB: { $divide: [\"$specs.ram\", 1024] },\n      oCung: \"$specs.hd\",\n      manHinh: \"$specs.screen\",\n      phanLoai: { $cond: [ { $gte: [\"$specs.speed\", 2.0] }, \"Hiệu năng cao\", \"Phổ thông\" ] },\n      price: 1\n  } },\n  { $sort: { model: 1 } }\n])",
+    "output": "[\n  {\n    maker: 'E',\n    model: 2001,\n    price: 3673,\n    tocDo: 2,\n    ramGB: 2,\n    oCung: 240,\n    manHinh: 20.1,\n    phanLoai: 'Hiệu năng cao'\n  },\n  {\n    maker: 'E',\n    model: 2002,\n    price: 949,\n    tocDo: 1.73,\n    ramGB: 1,\n    oCung: 80,\n    manHinh: 17,\n    phanLoai: 'Phổ thông'\n  },\n  {\n    maker: 'E',\n    model: 2003,\n    price: 549,\n    tocDo: 1.8,\n    ramGB: 0.5,\n    oCung: 60,\n    manHinh: 15.4,\n    phanLoai: 'Phổ thông'\n  },\n  {\n    maker: 'A',\n    model: 2004,\n    price: 1150,\n    tocDo: 2,\n    ramGB: 0.5,\n    oCung: 60,\n    manHinh: 13.3,\n    phanLoai: 'Hiệu năng cao'\n  },\n  {\n    maker: 'A',\n    model: 2005,\n    price: 2500,\n    tocDo: 2.16,\n    ramGB: 1,\n    oCung: 120,\n    manHinh: 17,\n    phanLoai: 'Hiệu năng cao'\n  },\n  {\n    maker: 'A',\n    model: 2006,\n    price: 1700,\n    tocDo: 2,\n    ramGB: 2,\n    oCung: 80,\n    manHinh: 15.4,\n    phanLoai: 'Hiệu năng cao'\n  },\n  {\n    maker: 'B',\n    model: 2007,\n    price: 1429,\n    tocDo: 1.83,\n    ramGB: 1,\n    oCung: 120,\n    manHinh: 13.3,\n    phanLoai: 'Phổ thông'\n  },\n  {\n    maker: 'F',\n    model: 2008,\n    price: 900,\n    tocDo: 1.6,\n    ramGB: 1,\n    oCung: 100,\n    manHinh: 15.4,\n    phanLoai: 'Phổ thông'\n  },\n  {\n    maker: 'F',\n    model: 2009,\n    price: 680,\n    tocDo: 1.6,\n    ramGB: 0.5,\n    oCung: 80,\n    manHinh: 14.1,\n    phanLoai: 'Phổ thông'\n  },\n  {\n    maker: 'G',\n    model: 2010,\n    price: 2300,\n    tocDo: 2,\n    ramGB: 2,\n    oCung: 160,\n    manHinh: 15.4,\n    phanLoai: 'Hiệu năng cao'\n  }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc6",
+    "command": "db.products.aggregate([\n  { $match: { type: \"printer\" } },\n  { $project: {\n      _id: 0, model: 1, maker: 1,\n      congNghe: \"$specs.type\",\n      mauIn: { $cond: [ \"$specs.color\", \"In màu\", \"Đen trắng\" ] },\n      price: 1\n  } },\n  { $sort: { price: 1, model: 1 } }\n])",
+    "output": "[\n  {\n    maker: 'E',\n    model: 3001,\n    price: 99,\n    congNghe: 'ink-jet',\n    mauIn: 'In màu'\n  },\n  {\n    maker: 'H',\n    model: 3006,\n    price: 100,\n    congNghe: 'ink-jet',\n    mauIn: 'In màu'\n  },\n  {\n    maker: 'D',\n    model: 3004,\n    price: 120,\n    congNghe: 'ink-jet',\n    mauIn: 'In màu'\n  },\n  {\n    maker: 'D',\n    model: 3005,\n    price: 120,\n    congNghe: 'laser',\n    mauIn: 'Đen trắng'\n  },\n  {\n    maker: 'H',\n    model: 3007,\n    price: 200,\n    congNghe: 'laser',\n    mauIn: 'In màu'\n  },\n  {\n    maker: 'E',\n    model: 3002,\n    price: 239,\n    congNghe: 'laser',\n    mauIn: 'Đen trắng'\n  },\n  {\n    maker: 'E',\n    model: 3003,\n    price: 899,\n    congNghe: 'laser',\n    mauIn: 'In màu'\n  }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc7",
+    "command": "db.products.aggregate([\n  { $group: {\n      _id: { maker: \"$maker\", type: \"$type\" },\n      soLuong: { $sum: 1 }\n  } },\n  { $sort: { \"_id.maker\": 1, \"_id.type\": 1 } }\n])",
+    "output": "[\n  { _id: { maker: 'A', type: 'laptop' }, soLuong: 3 },\n  { _id: { maker: 'A', type: 'pc' }, soLuong: 3 },\n  { _id: { maker: 'B', type: 'laptop' }, soLuong: 1 },\n  { _id: { maker: 'B', type: 'pc' }, soLuong: 3 },\n  { _id: { maker: 'C', type: 'pc' }, soLuong: 1 },\n  { _id: { maker: 'D', type: 'pc' }, soLuong: 3 },\n  { _id: { maker: 'D', type: 'printer' }, soLuong: 2 },\n  { _id: { maker: 'E', type: 'laptop' }, soLuong: 3 },\n  { _id: { maker: 'E', type: 'pc' }, soLuong: 3 },\n  { _id: { maker: 'E', type: 'printer' }, soLuong: 3 },\n  { _id: { maker: 'F', type: 'laptop' }, soLuong: 2 },\n  { _id: { maker: 'G', type: 'laptop' }, soLuong: 1 },\n  { _id: { maker: 'H', type: 'printer' }, soLuong: 2 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc8",
+    "command": "db.products.aggregate([\n  { $match: { type: \"laptop\" } },\n  { $group: {\n      _id: \"$maker\",\n      soLaptop: { $sum: 1 },\n      giaTB: { $avg: \"$price\" },\n      giaMin: { $min: \"$price\" },\n      giaMax: { $max: \"$price\" }\n  } },\n  { $project: { soLaptop: 1, giaTB: { $round: [\"$giaTB\", 2] }, giaMin: 1, giaMax: 1 } },\n  { $sort: { giaTB: -1 } }\n])",
+    "output": "[\n  { _id: 'G', soLaptop: 1, giaMin: 2300, giaMax: 2300, giaTB: 2300 },\n  { _id: 'A', soLaptop: 3, giaMin: 1150, giaMax: 2500, giaTB: 1783.33 },\n  { _id: 'E', soLaptop: 3, giaMin: 549, giaMax: 3673, giaTB: 1723.67 },\n  { _id: 'B', soLaptop: 1, giaMin: 1429, giaMax: 1429, giaTB: 1429 },\n  { _id: 'F', soLaptop: 2, giaMin: 680, giaMax: 900, giaTB: 790 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc9",
+    "command": "db.products.aggregate([\n  { $group: {\n      _id: \"$type\",\n      soLuong: { $sum: 1 },\n      coGia: { $sum: { $cond: [ { $ifNull: [\"$price\", false] }, 1, 0 ] } },\n      tongGia: { $sum: \"$price\" },\n      giaTB: { $avg: \"$price\" }\n  } },\n  { $project: { soLuong: 1, coGia: 1, tongGia: 1, giaTB: { $round: [\"$giaTB\", 2] } } },\n  { $sort: { soLuong: -1 } }\n])",
+    "output": "[\n  { _id: 'pc', soLuong: 13, coGia: 0, tongGia: 0, giaTB: null },\n  { _id: 'laptop', soLuong: 10, coGia: 10, tongGia: 15830, giaTB: 1583 },\n  { _id: 'printer', soLuong: 7, coGia: 7, tongGia: 1777, giaTB: 253.86 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc10",
+    "command": "db.products.aggregate([\n  { $match: { type: \"laptop\" } },\n  { $group: { _id: \"$specs.hd\", soLaptop: { $sum: 1 }, dsModel: { $push: \"$model\" } } },\n  { $match: { soLaptop: { $gte: 2 } } },\n  { $sort: { soLaptop: -1, _id: 1 } }\n])",
+    "output": "[\n  { _id: 80, soLaptop: 3, dsModel: [ 2006, 2002, 2009 ] },\n  { _id: 60, soLaptop: 2, dsModel: [ 2004, 2003 ] },\n  { _id: 120, soLaptop: 2, dsModel: [ 2005, 2007 ] }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc11",
+    "command": "db.products.aggregate([\n  { $match: { price: { $exists: true } } },\n  { $sort: { price: -1 } },\n  { $limit: 3 },\n  { $project: { _id: 0, maker: 1, model: 1, type: 1, price: 1 } }\n])",
+    "output": "[\n  { maker: 'E', model: 2001, type: 'laptop', price: 3673 },\n  { maker: 'A', model: 2005, type: 'laptop', price: 2500 },\n  { maker: 'G', model: 2010, type: 'laptop', price: 2300 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc12",
+    "command": "db.products.aggregate([\n  { $match: { type: \"laptop\" } },\n  { $bucket: {\n      groupBy: \"$price\",\n      boundaries: [0, 1000, 2000, 5000],\n      default: \"Khác\",\n      output: { soLaptop: { $sum: 1 }, dsModel: { $push: \"$model\" }, giaTB: { $avg: \"$price\" } }\n  } },\n  { $project: { soLaptop: 1, dsModel: 1, giaTB: { $round: [\"$giaTB\", 2] } } }\n])",
+    "output": "[\n  {\n    _id: 0,\n    soLaptop: 4,\n    dsModel: [ 2002, 2003, 2008, 2009 ],\n    giaTB: 769.5\n  },\n  {\n    _id: 1000,\n    soLaptop: 3,\n    dsModel: [ 2004, 2006, 2007 ],\n    giaTB: 1426.33\n  },\n  {\n    _id: 2000,\n    soLaptop: 3,\n    dsModel: [ 2005, 2001, 2010 ],\n    giaTB: 2824.33\n  }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc13a",
+    "command": "db.products.aggregate([\n  { $group: { _id: \"$maker\", cacLoai: { $addToSet: \"$type\" } } },\n  { $match: { cacLoai: { $all: [\"laptop\"], $nin: [\"pc\"] } } },\n  { $sort: { _id: 1 } }\n])",
+    "output": "[\n  { _id: 'F', cacLoai: [ 'laptop' ] },\n  { _id: 'G', cacLoai: [ 'laptop' ] }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc13b",
+    "command": "db.products.aggregate([\n  { $group: { _id: \"$maker\", cacLoai: { $addToSet: \"$type\" } } },\n  { $project: { soLoai: { $size: \"$cacLoai\" }, cacLoai: { $sortArray: { input: \"$cacLoai\", sortBy: 1 } } } },\n  { $match: { soLoai: { $gte: 2 } } },\n  { $sort: { soLoai: -1, _id: 1 } }\n])",
+    "output": "[\n  { _id: 'E', soLoai: 3, cacLoai: [ 'laptop', 'pc', 'printer' ] },\n  { _id: 'A', soLoai: 2, cacLoai: [ 'laptop', 'pc' ] },\n  { _id: 'B', soLoai: 2, cacLoai: [ 'laptop', 'pc' ] },\n  { _id: 'D', soLoai: 2, cacLoai: [ 'pc', 'printer' ] }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc14",
+    "command": "db.makers.aggregate([\n  { $match: { \"products.type\": \"laptop\" } },\n  { $lookup: {\n      from: \"products\",\n      localField: \"products.model\",\n      foreignField: \"model\",\n      as: \"chiTiet\"\n  } },\n  { $project: {\n      _id: 0, maker: \"$_id\",\n      laptops: { $filter: { input: \"$chiTiet\", as: \"p\", cond: { $eq: [\"$$p.type\", \"laptop\"] } } }\n  } },\n  { $project: {\n      maker: 1,\n      soLaptop: { $size: \"$laptops\" },\n      dsModel: { $sortArray: { input: \"$laptops.model\", sortBy: 1 } },\n      giaTB: { $round: [ { $avg: \"$laptops.price\" }, 2 ] },\n      ramMax: { $max: \"$laptops.specs.ram\" }\n  } },\n  { $sort: { maker: 1 } }\n])",
+    "output": "[\n  {\n    maker: 'A',\n    soLaptop: 3,\n    dsModel: [ 2004, 2005, 2006 ],\n    giaTB: 1783.33,\n    ramMax: 2048\n  },\n  {\n    maker: 'B',\n    soLaptop: 1,\n    dsModel: [ 2007 ],\n    giaTB: 1429,\n    ramMax: 1024\n  },\n  {\n    maker: 'E',\n    soLaptop: 3,\n    dsModel: [ 2001, 2002, 2003 ],\n    giaTB: 1723.67,\n    ramMax: 2048\n  },\n  {\n    maker: 'F',\n    soLaptop: 2,\n    dsModel: [ 2008, 2009 ],\n    giaTB: 790,\n    ramMax: 1024\n  },\n  {\n    maker: 'G',\n    soLaptop: 1,\n    dsModel: [ 2010 ],\n    giaTB: 2300,\n    ramMax: 2048\n  }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc15",
+    "command": "db.products.aggregate([\n  { $match: { type: \"printer\" } },\n  { $lookup: { from: \"makers\", localField: \"maker\", foreignField: \"_id\", as: \"nsx\" } },\n  { $unwind: \"$nsx\" },\n  { $project: {\n      _id: 0, model: 1, maker: 1, price: 1,\n      tongSanPhamCuaNSX: { $size: \"$nsx.products\" }\n  } },\n  { $sort: { maker: 1, model: 1 } }\n])",
+    "output": "[\n  { maker: 'D', model: 3004, price: 120, tongSanPhamCuaNSX: 5 },\n  { maker: 'D', model: 3005, price: 120, tongSanPhamCuaNSX: 5 },\n  { maker: 'E', model: 3001, price: 99, tongSanPhamCuaNSX: 9 },\n  { maker: 'E', model: 3002, price: 239, tongSanPhamCuaNSX: 9 },\n  { maker: 'E', model: 3003, price: 899, tongSanPhamCuaNSX: 9 },\n  { maker: 'H', model: 3006, price: 100, tongSanPhamCuaNSX: 2 },\n  { maker: 'H', model: 3007, price: 200, tongSanPhamCuaNSX: 2 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "yc16",
+    "command": "db.makers.aggregate([\n  { $match: { \"products.type\": \"printer\" } },\n  { $lookup: {\n      from: \"products\",\n      let: { mk: \"$_id\" },\n      pipeline: [\n        { $match: { $expr: { $and: [ { $eq: [\"$maker\", \"$$mk\"] }, { $eq: [\"$type\", \"printer\"] } ] } } },\n        { $group: {\n            _id: null,\n            soMayIn: { $sum: 1 },\n            soMayInMau: { $sum: { $cond: [\"$specs.color\", 1, 0] } },\n            giaThapNhat: { $min: \"$price\" }\n        } }\n      ],\n      as: \"thongKe\"\n  } },\n  { $unwind: \"$thongKe\" },\n  { $project: {\n      _id: 0, maker: \"$_id\",\n      soMayIn: \"$thongKe.soMayIn\",\n      soMayInMau: \"$thongKe.soMayInMau\",\n      giaThapNhat: \"$thongKe.giaThapNhat\"\n  } }\n])",
+    "output": "[\n  { maker: 'D', soMayIn: 2, soMayInMau: 1, giaThapNhat: 120 },\n  { maker: 'E', soMayIn: 3, soMayInMau: 2, giaThapNhat: 99 },\n  { maker: 'H', soMayIn: 2, soMayInMau: 2, giaThapNhat: 100 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   }
+  ],
+  "raw": "rs0 [direct: primary] QLThietBi> @@STEP:yc1@@\n\nrs0 [direct: primary] QLThietBi> [\n  {\n    maker: 'E',\n    model: 2003,\n    specs: { speed: 1.8, ram: 512, hd: 60 },\n    price: 549\n  },\n  {\n    maker: 'F',\n    model: 2009,\n    specs: { speed: 1.6, ram: 512, hd: 80 },\n    price: 680\n  },\n  {\n    maker: 'F',\n    model: 2008,\n    specs: { speed: 1.6, ram: 1024, hd: 100 },\n    price: 900\n  },\n  {\n    maker: 'E',\n    model: 2002,\n    specs: { speed: 1.73, ram: 1024, hd: 80 },\n    price: 949\n  }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc2@@\n\nrs0 [direct: primary] QLThietBi> [ 'A', 'B', 'E', 'F', 'G' ]\nrs0 [direct: primary] QLThietBi> @@STEP:yc3@@\n\nrs0 [direct: primary] QLThietBi> [\n  {\n    maker: 'E',\n    model: 2001,\n    specs: { ram: 2048, screen: 20.1 },\n    price: 3673\n  },\n  {\n    maker: 'A',\n    model: 2005,\n    specs: { ram: 1024, screen: 17 },\n    price: 2500\n  },\n  {\n    maker: 'E',\n    model: 2002,\n    specs: { ram: 1024, screen: 17 },\n    price: 949\n  },\n  {\n    maker: 'G',\n    model: 2010,\n    specs: { ram: 2048, screen: 15.4 },\n    price: 2300\n  },\n  {\n    maker: 'A',\n    model: 2006,\n    specs: { ram: 2048, screen: 15.4 },\n    price: 1700\n  },\n  {\n    maker: 'F',\n    model: 2008,\n    specs: { ram: 1024, screen: 15.4 },\n    price: 900\n  }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc4@@\n\nrs0 [direct: primary] QLThietBi> [\n  { model: 3002, type: 'printer', price: 239 },\n  { model: 2003, type: 'laptop', price: 549 },\n  { model: 3003, type: 'printer', price: 899 },\n  { model: 2002, type: 'laptop', price: 949 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc4_count@@\n\nrs0 [direct: primary] QLThietBi> 4\nrs0 [direct: primary] QLThietBi> @@STEP:yc5@@\n\nrs0 [direct: primary] QLThietBi> [\n  {\n    maker: 'E',\n    model: 2001,\n    price: 3673,\n    tocDo: 2,\n    ramGB: 2,\n    oCung: 240,\n    manHinh: 20.1,\n    phanLoai: 'Hiệu năng cao'\n  },\n  {\n    maker: 'E',\n    model: 2002,\n    price: 949,\n    tocDo: 1.73,\n    ramGB: 1,\n    oCung: 80,\n    manHinh: 17,\n    phanLoai: 'Phổ thông'\n  },\n  {\n    maker: 'E',\n    model: 2003,\n    price: 549,\n    tocDo: 1.8,\n    ramGB: 0.5,\n    oCung: 60,\n    manHinh: 15.4,\n    phanLoai: 'Phổ thông'\n  },\n  {\n    maker: 'A',\n    model: 2004,\n    price: 1150,\n    tocDo: 2,\n    ramGB: 0.5,\n    oCung: 60,\n    manHinh: 13.3,\n    phanLoai: 'Hiệu năng cao'\n  },\n  {\n    maker: 'A',\n    model: 2005,\n    price: 2500,\n    tocDo: 2.16,\n    ramGB: 1,\n    oCung: 120,\n    manHinh: 17,\n    phanLoai: 'Hiệu năng cao'\n  },\n  {\n    maker: 'A',\n    model: 2006,\n    price: 1700,\n    tocDo: 2,\n    ramGB: 2,\n    oCung: 80,\n    manHinh: 15.4,\n    phanLoai: 'Hiệu năng cao'\n  },\n  {\n    maker: 'B',\n    model: 2007,\n    price: 1429,\n    tocDo: 1.83,\n    ramGB: 1,\n    oCung: 120,\n    manHinh: 13.3,\n    phanLoai: 'Phổ thông'\n  },\n  {\n    maker: 'F',\n    model: 2008,\n    price: 900,\n    tocDo: 1.6,\n    ramGB: 1,\n    oCung: 100,\n    manHinh: 15.4,\n    phanLoai: 'Phổ thông'\n  },\n  {\n    maker: 'F',\n    model: 2009,\n    price: 680,\n    tocDo: 1.6,\n    ramGB: 0.5,\n    oCung: 80,\n    manHinh: 14.1,\n    phanLoai: 'Phổ thông'\n  },\n  {\n    maker: 'G',\n    model: 2010,\n    price: 2300,\n    tocDo: 2,\n    ramGB: 2,\n    oCung: 160,\n    manHinh: 15.4,\n    phanLoai: 'Hiệu năng cao'\n  }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc6@@\n\nrs0 [direct: primary] QLThietBi> [\n  {\n    maker: 'E',\n    model: 3001,\n    price: 99,\n    congNghe: 'ink-jet',\n    mauIn: 'In màu'\n  },\n  {\n    maker: 'H',\n    model: 3006,\n    price: 100,\n    congNghe: 'ink-jet',\n    mauIn: 'In màu'\n  },\n  {\n    maker: 'D',\n    model: 3004,\n    price: 120,\n    congNghe: 'ink-jet',\n    mauIn: 'In màu'\n  },\n  {\n    maker: 'D',\n    model: 3005,\n    price: 120,\n    congNghe: 'laser',\n    mauIn: 'Đen trắng'\n  },\n  {\n    maker: 'H',\n    model: 3007,\n    price: 200,\n    congNghe: 'laser',\n    mauIn: 'In màu'\n  },\n  {\n    maker: 'E',\n    model: 3002,\n    price: 239,\n    congNghe: 'laser',\n    mauIn: 'Đen trắng'\n  },\n  {\n    maker: 'E',\n    model: 3003,\n    price: 899,\n    congNghe: 'laser',\n    mauIn: 'In màu'\n  }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc7@@\n\nrs0 [direct: primary] QLThietBi> [\n  { _id: { maker: 'A', type: 'laptop' }, soLuong: 3 },\n  { _id: { maker: 'A', type: 'pc' }, soLuong: 3 },\n  { _id: { maker: 'B', type: 'laptop' }, soLuong: 1 },\n  { _id: { maker: 'B', type: 'pc' }, soLuong: 3 },\n  { _id: { maker: 'C', type: 'pc' }, soLuong: 1 },\n  { _id: { maker: 'D', type: 'pc' }, soLuong: 3 },\n  { _id: { maker: 'D', type: 'printer' }, soLuong: 2 },\n  { _id: { maker: 'E', type: 'laptop' }, soLuong: 3 },\n  { _id: { maker: 'E', type: 'pc' }, soLuong: 3 },\n  { _id: { maker: 'E', type: 'printer' }, soLuong: 3 },\n  { _id: { maker: 'F', type: 'laptop' }, soLuong: 2 },\n  { _id: { maker: 'G', type: 'laptop' }, soLuong: 1 },\n  { _id: { maker: 'H', type: 'printer' }, soLuong: 2 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc8@@\n\nrs0 [direct: primary] QLThietBi> [\n  { _id: 'G', soLaptop: 1, giaMin: 2300, giaMax: 2300, giaTB: 2300 },\n  { _id: 'A', soLaptop: 3, giaMin: 1150, giaMax: 2500, giaTB: 1783.33 },\n  { _id: 'E', soLaptop: 3, giaMin: 549, giaMax: 3673, giaTB: 1723.67 },\n  { _id: 'B', soLaptop: 1, giaMin: 1429, giaMax: 1429, giaTB: 1429 },\n  { _id: 'F', soLaptop: 2, giaMin: 680, giaMax: 900, giaTB: 790 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc9@@\n\nrs0 [direct: primary] QLThietBi> [\n  { _id: 'pc', soLuong: 13, coGia: 0, tongGia: 0, giaTB: null },\n  { _id: 'laptop', soLuong: 10, coGia: 10, tongGia: 15830, giaTB: 1583 },\n  { _id: 'printer', soLuong: 7, coGia: 7, tongGia: 1777, giaTB: 253.86 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc10@@\n\nrs0 [direct: primary] QLThietBi> [\n  { _id: 80, soLaptop: 3, dsModel: [ 2006, 2002, 2009 ] },\n  { _id: 60, soLaptop: 2, dsModel: [ 2004, 2003 ] },\n  { _id: 120, soLaptop: 2, dsModel: [ 2005, 2007 ] }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc11@@\n\nrs0 [direct: primary] QLThietBi> [\n  { maker: 'E', model: 2001, type: 'laptop', price: 3673 },\n  { maker: 'A', model: 2005, type: 'laptop', price: 2500 },\n  { maker: 'G', model: 2010, type: 'laptop', price: 2300 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc12@@\n\nrs0 [direct: primary] QLThietBi> [\n  {\n    _id: 0,\n    soLaptop: 4,\n    dsModel: [ 2002, 2003, 2008, 2009 ],\n    giaTB: 769.5\n  },\n  {\n    _id: 1000,\n    soLaptop: 3,\n    dsModel: [ 2004, 2006, 2007 ],\n    giaTB: 1426.33\n  },\n  {\n    _id: 2000,\n    soLaptop: 3,\n    dsModel: [ 2005, 2001, 2010 ],\n    giaTB: 2824.33\n  }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc13a@@\n\nrs0 [direct: primary] QLThietBi> [\n  { _id: 'F', cacLoai: [ 'laptop' ] },\n  { _id: 'G', cacLoai: [ 'laptop' ] }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc13b@@\n\nrs0 [direct: primary] QLThietBi> [\n  { _id: 'E', soLoai: 3, cacLoai: [ 'laptop', 'pc', 'printer' ] },\n  { _id: 'A', soLoai: 2, cacLoai: [ 'laptop', 'pc' ] },\n  { _id: 'B', soLoai: 2, cacLoai: [ 'laptop', 'pc' ] },\n  { _id: 'D', soLoai: 2, cacLoai: [ 'pc', 'printer' ] }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc14@@\n\nrs0 [direct: primary] QLThietBi> [\n  {\n    maker: 'A',\n    soLaptop: 3,\n    dsModel: [ 2004, 2005, 2006 ],\n    giaTB: 1783.33,\n    ramMax: 2048\n  },\n  {\n    maker: 'B',\n    soLaptop: 1,\n    dsModel: [ 2007 ],\n    giaTB: 1429,\n    ramMax: 1024\n  },\n  {\n    maker: 'E',\n    soLaptop: 3,\n    dsModel: [ 2001, 2002, 2003 ],\n    giaTB: 1723.67,\n    ramMax: 2048\n  },\n  {\n    maker: 'F',\n    soLaptop: 2,\n    dsModel: [ 2008, 2009 ],\n    giaTB: 790,\n    ramMax: 1024\n  },\n  {\n    maker: 'G',\n    soLaptop: 1,\n    dsModel: [ 2010 ],\n    giaTB: 2300,\n    ramMax: 2048\n  }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc15@@\n\nrs0 [direct: primary] QLThietBi> [\n  { maker: 'D', model: 3004, price: 120, tongSanPhamCuaNSX: 5 },\n  { maker: 'D', model: 3005, price: 120, tongSanPhamCuaNSX: 5 },\n  { maker: 'E', model: 3001, price: 99, tongSanPhamCuaNSX: 9 },\n  { maker: 'E', model: 3002, price: 239, tongSanPhamCuaNSX: 9 },\n  { maker: 'E', model: 3003, price: 899, tongSanPhamCuaNSX: 9 },\n  { maker: 'H', model: 3006, price: 100, tongSanPhamCuaNSX: 2 },\n  { maker: 'H', model: 3007, price: 200, tongSanPhamCuaNSX: 2 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:yc16@@\n\nrs0 [direct: primary] QLThietBi> [\n  { maker: 'D', soMayIn: 2, soMayInMau: 1, giaThapNhat: 120 },\n  { maker: 'E', soMayIn: 3, soMayInMau: 2, giaThapNhat: 99 },\n  { maker: 'H', soMayIn: 2, soMayInMau: 2, giaThapNhat: 100 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:__end__@@\n\nrs0 [direct: primary] QLThietBi> "
+ }
+]

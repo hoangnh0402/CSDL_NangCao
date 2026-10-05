@@ -1,0 +1,251 @@
+[
+ {
+  "kind": "mongosh",
+  "name": "ch1",
+  "container": "mongo1",
+  "uri": "mongodb://mongo1:27017/?directConnection=true",
+  "steps": [
+   {
+    "id": "use_db",
+    "command": "use QLThietBi",
+    "output": "switched to db QLThietBi",
+    "prompt": "rs0 [direct: primary] test>"
+   },
+   {
+    "id": "create_products",
+    "command": "db.createCollection(\"products\", {\n  validator: {\n    $jsonSchema: {\n      bsonType: \"object\",\n      required: [\"maker\", \"model\", \"type\"],\n      properties: {\n        maker: { bsonType: \"string\", description: \"Mã nhà sản xuất\" },\n        model: { bsonType: \"number\", description: \"Mã model sản phẩm\" },\n        type:  { enum: [\"pc\", \"laptop\", \"printer\"], description: \"Loại sản phẩm\" },\n        price: { bsonType: \"number\", minimum: 0 },\n        specs: { bsonType: \"object\" }\n      }\n    }\n  },\n  validationLevel: \"strict\",\n  validationAction: \"error\"\n})",
+    "output": "{ ok: 1 }",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "index_model",
+    "command": "db.products.createIndex({ model: 1 }, { unique: true, name: \"uq_model\" })",
+    "output": "uq_model",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "insert_products",
+    "command": "db.products.insertMany([\n  { maker: \"A\", model: 1001, type: \"pc\" },\n  { maker: \"A\", model: 1002, type: \"pc\" },\n  { maker: \"A\", model: 1003, type: \"pc\" },\n  { maker: \"A\", model: 2004, type: \"laptop\", specs: { speed: 2.00, ram: 512,  hd: 60,  screen: 13.3 }, price: 1150 },\n  { maker: \"A\", model: 2005, type: \"laptop\", specs: { speed: 2.16, ram: 1024, hd: 120, screen: 17.0 }, price: 2500 },\n  { maker: \"A\", model: 2006, type: \"laptop\", specs: { speed: 2.00, ram: 2048, hd: 80,  screen: 15.4 }, price: 1700 },\n  { maker: \"B\", model: 1004, type: \"pc\" },\n  { maker: \"B\", model: 1005, type: \"pc\" },\n  { maker: \"B\", model: 1006, type: \"pc\" },\n  { maker: \"B\", model: 2007, type: \"laptop\", specs: { speed: 1.83, ram: 1024, hd: 120, screen: 13.3 }, price: 1429 },\n  { maker: \"C\", model: 1007, type: \"pc\" },\n  { maker: \"D\", model: 1008, type: \"pc\" },\n  { maker: \"D\", model: 1009, type: \"pc\" },\n  { maker: \"D\", model: 1010, type: \"pc\" },\n  { maker: \"D\", model: 3004, type: \"printer\", specs: { color: true,  type: \"ink-jet\" }, price: 120 },\n  { maker: \"D\", model: 3005, type: \"printer\", specs: { color: false, type: \"laser\" },   price: 120 },\n  { maker: \"E\", model: 1011, type: \"pc\" },\n  { maker: \"E\", model: 1012, type: \"pc\" },\n  { maker: \"E\", model: 1013, type: \"pc\" },\n  { maker: \"E\", model: 2001, type: \"laptop\", specs: { speed: 2.00, ram: 2048, hd: 240, screen: 20.1 }, price: 3673 },\n  { maker: \"E\", model: 2002, type: \"laptop\", specs: { speed: 1.73, ram: 1024, hd: 80,  screen: 17.0 }, price: 949 },\n  { maker: \"E\", model: 2003, type: \"laptop\", specs: { speed: 1.80, ram: 512,  hd: 60,  screen: 15.4 }, price: 549 },\n  { maker: \"E\", model: 3001, type: \"printer\", specs: { color: true,  type: \"ink-jet\" }, price: 99 },\n  { maker: \"E\", model: 3002, type: \"printer\", specs: { color: false, type: \"laser\" },   price: 239 },\n  { maker: \"E\", model: 3003, type: \"printer\", specs: { color: true,  type: \"laser\" },   price: 899 },\n  { maker: \"F\", model: 2008, type: \"laptop\", specs: { speed: 1.60, ram: 1024, hd: 100, screen: 15.4 }, price: 900 },\n  { maker: \"F\", model: 2009, type: \"laptop\", specs: { speed: 1.60, ram: 512,  hd: 80,  screen: 14.1 }, price: 680 },\n  { maker: \"G\", model: 2010, type: \"laptop\", specs: { speed: 2.00, ram: 2048, hd: 160, screen: 15.4 }, price: 2300 },\n  { maker: \"H\", model: 3006, type: \"printer\", specs: { color: true,  type: \"ink-jet\" }, price: 100 },\n  { maker: \"H\", model: 3007, type: \"printer\", specs: { color: true,  type: \"laser\" },   price: 200 }\n])",
+    "output": "{\n  acknowledged: true,\n  insertedIds: {\n    '0': ObjectId('6ac352db92db87c20489e4e0'),\n    '1': ObjectId('6ac352db92db87c20489e4e1'),\n    '2': ObjectId('6ac352db92db87c20489e4e2'),\n    '3': ObjectId('6ac352db92db87c20489e4e3'),\n    '4': ObjectId('6ac352db92db87c20489e4e4'),\n    '5': ObjectId('6ac352db92db87c20489e4e5'),\n    '6': ObjectId('6ac352db92db87c20489e4e6'),\n    '7': ObjectId('6ac352db92db87c20489e4e7'),\n    '8': ObjectId('6ac352db92db87c20489e4e8'),\n    '9': ObjectId('6ac352db92db87c20489e4e9'),\n    '10': ObjectId('6ac352db92db87c20489e4ea'),\n    '11': ObjectId('6ac352db92db87c20489e4eb'),\n    '12': ObjectId('6ac352db92db87c20489e4ec'),\n    '13': ObjectId('6ac352db92db87c20489e4ed'),\n    '14': ObjectId('6ac352db92db87c20489e4ee'),\n    '15': ObjectId('6ac352db92db87c20489e4ef'),\n    '16': ObjectId('6ac352db92db87c20489e4f0'),\n    '17': ObjectId('6ac352db92db87c20489e4f1'),\n    '18': ObjectId('6ac352db92db87c20489e4f2'),\n    '19': ObjectId('6ac352db92db87c20489e4f3'),\n    '20': ObjectId('6ac352db92db87c20489e4f4'),\n    '21': ObjectId('6ac352db92db87c20489e4f5'),\n    '22': ObjectId('6ac352db92db87c20489e4f6'),\n    '23': ObjectId('6ac352db92db87c20489e4f7'),\n    '24': ObjectId('6ac352db92db87c20489e4f8'),\n    '25': ObjectId('6ac352db92db87c20489e4f9'),\n    '26': ObjectId('6ac352db92db87c20489e4fa'),\n    '27': ObjectId('6ac352db92db87c20489e4fb'),\n    '28': ObjectId('6ac352db92db87c20489e4fc'),\n    '29': ObjectId('6ac352db92db87c20489e4fd')\n  }\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "count_all",
+    "command": "db.products.countDocuments()",
+    "output": "30",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "count_by_type",
+    "command": "db.products.aggregate([\n  { $group: { _id: \"$type\", soLuong: { $sum: 1 } } },\n  { $sort: { _id: 1 } }\n])",
+    "output": "[\n  { _id: 'laptop', soLuong: 10 },\n  { _id: 'pc', soLuong: 13 },\n  { _id: 'printer', soLuong: 7 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "build_makers",
+    "command": "db.products.aggregate([\n  { $sort: { model: 1 } },\n  { $group: { _id: \"$maker\", products: { $push: { model: \"$model\", type: \"$type\" } } } },\n  { $sort: { _id: 1 } },\n  { $out: \"makers\" }\n])",
+    "output": "",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "makers_count",
+    "command": "db.makers.countDocuments()",
+    "output": "8",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "makers_find_A",
+    "command": "db.makers.findOne({ _id: \"A\" })",
+    "output": "{\n  _id: 'A',\n  products: [\n    { model: 1001, type: 'pc' },\n    { model: 1002, type: 'pc' },\n    { model: 1003, type: 'pc' },\n    { model: 2004, type: 'laptop' },\n    { model: 2005, type: 'laptop' },\n    { model: 2006, type: 'laptop' }\n  ]\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "makers_list",
+    "command": "db.makers.find({}, { _id: 1, soSanPham: { $size: \"$products\" } })",
+    "output": "[\n  { _id: 'A', soSanPham: 6 },\n  { _id: 'B', soSanPham: 4 },\n  { _id: 'C', soSanPham: 1 },\n  { _id: 'D', soSanPham: 5 },\n  { _id: 'E', soSanPham: 9 },\n  { _id: 'F', soSanPham: 2 },\n  { _id: 'G', soSanPham: 1 },\n  { _id: 'H', soSanPham: 2 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "invalid_insert",
+    "command": "db.products.insertOne({ maker: \"Z\", model: 9001, type: \"tablet\" })",
+    "output": "Uncaught:\n\nMongoServerError: Document failed validation\nAdditional information: {\n  failingDocumentId: ObjectId('6ac352db92db87c20489e4fe'),\n  details: {\n    operatorName: '$jsonSchema',\n    schemaRulesNotSatisfied: [\n      {\n        operatorName: 'properties',\n        propertiesNotSatisfied: [\n          {\n            propertyName: 'type',\n            description: 'Loại sản phẩm',\n            details: [\n              {\n                operatorName: 'enum',\n                specifiedAs: { enum: [ 'pc', 'laptop', 'printer' ] },\n                reason: 'value was not found in enum',\n                consideredValue: 'tablet'\n              }\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "dup_insert",
+    "command": "db.products.insertOne({ maker: \"A\", model: 1001, type: \"pc\" })",
+    "output": "Uncaught \nMongoServerError: E11000 duplicate key error collection: QLThietBi.products index: uq_model dup key: { model: 1001 }",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "findone_2001",
+    "command": "db.products.findOne({ model: 2001 })",
+    "output": "{\n  _id: ObjectId('6ac352db92db87c20489e4f3'),\n  maker: 'E',\n  model: 2001,\n  type: 'laptop',\n  specs: { speed: 2, ram: 2048, hd: 240, screen: 20.1 },\n  price: 3673\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "find_maker_B",
+    "command": "db.products.find({ maker: \"B\" }, { _id: 0, maker: 1, model: 1, type: 1, price: 1 })",
+    "output": "[\n  { maker: 'B', model: 1004, type: 'pc' },\n  { maker: 'B', model: 1005, type: 'pc' },\n  { maker: 'B', model: 1006, type: 'pc' },\n  { maker: 'B', model: 2007, type: 'laptop', price: 1429 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "find_printer_le120",
+    "command": "db.products.find(\n  { type: \"printer\", price: { $lte: 120 } },\n  { _id: 0, model: 1, maker: 1, price: 1 }\n).sort({ price: 1, model: 1 })",
+    "output": "[\n  { maker: 'E', model: 3001, price: 99 },\n  { maker: 'H', model: 3006, price: 100 },\n  { maker: 'D', model: 3004, price: 120 },\n  { maker: 'D', model: 3005, price: 120 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "find_or",
+    "command": "db.products.find(\n  { $or: [ { maker: \"F\" }, { maker: \"G\" } ] },\n  { _id: 0, maker: 1, model: 1, price: 1 }\n)",
+    "output": "[\n  { maker: 'F', model: 2008, price: 900 },\n  { maker: 'F', model: 2009, price: 680 },\n  { maker: 'G', model: 2010, price: 2300 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "update_one",
+    "command": "db.products.updateOne({ model: 2002 }, { $set: { price: 999 } })",
+    "output": "{\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "update_one_check",
+    "command": "db.products.findOne({ model: 2002 }, { _id: 0, model: 1, price: 1 })",
+    "output": "{ model: 2002, price: 999 }",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "update_one_revert",
+    "command": "db.products.updateOne({ model: 2002 }, { $set: { price: 949 } })",
+    "output": "{\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "update_many",
+    "command": "db.products.updateMany(\n  { type: \"printer\", \"specs.type\": \"laser\" },\n  { $inc: { price: 10 } }\n)",
+    "output": "{\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 4,\n  modifiedCount: 4,\n  upsertedCount: 0\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "update_many_check",
+    "command": "db.products.find(\n  { type: \"printer\", \"specs.type\": \"laser\" },\n  { _id: 0, model: 1, price: 1 }\n).sort({ model: 1 })",
+    "output": "[\n  { model: 3002, price: 249 },\n  { model: 3003, price: 909 },\n  { model: 3005, price: 130 },\n  { model: 3007, price: 210 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "update_many_revert",
+    "command": "db.products.updateMany(\n  { type: \"printer\", \"specs.type\": \"laser\" },\n  { $inc: { price: -10 } }\n)",
+    "output": "{\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 4,\n  modifiedCount: 4,\n  upsertedCount: 0\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "update_invalid",
+    "command": "db.products.updateOne({ model: 3001 }, { $set: { price: -5 } })",
+    "output": "Uncaught:\n\nMongoServerError: Document failed validation\nAdditional information: {\n  failingDocumentId: ObjectId('6ac352db92db87c20489e4f6'),\n  details: {\n    operatorName: '$jsonSchema',\n    schemaRulesNotSatisfied: [\n      {\n        operatorName: 'properties',\n        propertiesNotSatisfied: [\n          {\n            propertyName: 'price',\n            details: [\n              {\n                operatorName: 'minimum',\n                specifiedAs: { minimum: 0 },\n                reason: 'comparison failed',\n                consideredValue: -5\n              }\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "embed_ram",
+    "command": "db.products.find(\n  { type: \"laptop\", \"specs.ram\": { $gte: 2048 } },\n  { _id: 0, maker: 1, model: 1, \"specs.ram\": 1, \"specs.hd\": 1, price: 1 }\n)",
+    "output": "[\n  { maker: 'A', model: 2006, specs: { ram: 2048, hd: 80 }, price: 1700 },\n  { maker: 'E', model: 2001, specs: { ram: 2048, hd: 240 }, price: 3673 },\n  { maker: 'G', model: 2010, specs: { ram: 2048, hd: 160 }, price: 2300 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "embed_color_laser",
+    "command": "db.products.find(\n  { \"specs.color\": true, \"specs.type\": \"laser\" },\n  { _id: 0, maker: 1, model: 1, specs: 1, price: 1 }\n)",
+    "output": "[\n  {\n    maker: 'E',\n    model: 3003,\n    specs: { color: true, type: 'laser' },\n    price: 899\n  },\n  {\n    maker: 'H',\n    model: 3007,\n    specs: { color: true, type: 'laser' },\n    price: 200\n  }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "embed_exists",
+    "command": "db.products.countDocuments({ specs: { $exists: false } })",
+    "output": "13",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "embed_update",
+    "command": "db.products.updateOne({ model: 2003 }, { $set: { \"specs.screen\": 15.6 } })",
+    "output": "{\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "embed_update_revert",
+    "command": "db.products.updateOne({ model: 2003 }, { $set: { \"specs.screen\": 15.4 } })",
+    "output": "{\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "arr_printer_makers",
+    "command": "db.makers.find({ \"products.type\": \"printer\" }, { _id: 1 })",
+    "output": "[ { _id: 'D' }, { _id: 'E' }, { _id: 'H' } ]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "arr_elemmatch",
+    "command": "db.makers.find(\n  { products: { $elemMatch: { type: \"laptop\", model: { $gte: 2008 } } } },\n  { _id: 1, products: 1 }\n)",
+    "output": "[\n  {\n    _id: 'F',\n    products: [ { model: 2008, type: 'laptop' }, { model: 2009, type: 'laptop' } ]\n  },\n  { _id: 'G', products: [ { model: 2010, type: 'laptop' } ] }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "arr_size",
+    "command": "db.makers.find({ products: { $size: 1 } })",
+    "output": "[\n  { _id: 'C', products: [ { model: 1007, type: 'pc' } ] },\n  { _id: 'G', products: [ { model: 2010, type: 'laptop' } ] }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "arr_all",
+    "command": "db.makers.find({ \"products.type\": { $all: [\"pc\", \"laptop\", \"printer\"] } }, { _id: 1 })",
+    "output": "[ { _id: 'E' } ]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "arr_addtoset",
+    "command": "db.makers.updateOne(\n  { _id: \"C\" },\n  { $addToSet: { products: { model: 1007, type: \"pc\" } } }\n)",
+    "output": "{\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 0,\n  upsertedCount: 0\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "arr_push",
+    "command": "db.makers.updateOne(\n  { _id: \"G\" },\n  { $push: { products: { model: 9999, type: \"laptop\" } } }\n)",
+    "output": "{\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "arr_push_check",
+    "command": "db.makers.findOne({ _id: \"G\" })",
+    "output": "{\n  _id: 'G',\n  products: [ { model: 2010, type: 'laptop' }, { model: 9999, type: 'laptop' } ]\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "arr_pull",
+    "command": "db.makers.updateOne(\n  { _id: \"G\" },\n  { $pull: { products: { model: 9999 } } }\n)",
+    "output": "{\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "arr_pull_check",
+    "command": "db.makers.findOne({ _id: \"G\" })",
+    "output": "{ _id: 'G', products: [ { model: 2010, type: 'laptop' } ] }",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "arr_positional",
+    "command": "db.makers.find(\n  { _id: \"E\", \"products.type\": \"printer\" },\n  { \"products.$\": 1 }\n)",
+    "output": "[ { _id: 'E', products: [ { model: 3001, type: 'printer' } ] } ]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "verify_restore",
+    "command": "db.products.aggregate([\n  { $match: { price: { $exists: true } } },\n  { $group: { _id: \"$type\", soLuong: { $sum: 1 }, tongGia: { $sum: \"$price\" } } },\n  { $sort: { _id: 1 } }\n])",
+    "output": "[\n  { _id: 'laptop', soLuong: 10, tongGia: 15830 },\n  { _id: 'printer', soLuong: 7, tongGia: 1777 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "verify_2003",
+    "command": "db.products.findOne({ model: 2003 }, { _id: 0, model: 1, specs: 1, price: 1 })",
+    "output": "{\n  model: 2003,\n  specs: { speed: 1.8, ram: 512, hd: 60, screen: 15.4 },\n  price: 549\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   }
+  ],
+  "raw": "rs0 [direct: primary] test> @@STEP:use_db@@\n\nrs0 [direct: primary] test> switched to db QLThietBi\nrs0 [direct: primary] QLThietBi> @@STEP:create_products@@\n\nrs0 [direct: primary] QLThietBi> { ok: 1 }\nrs0 [direct: primary] QLThietBi> @@STEP:index_model@@\n\nrs0 [direct: primary] QLThietBi> uq_model\nrs0 [direct: primary] QLThietBi> @@STEP:insert_products@@\n\nrs0 [direct: primary] QLThietBi> {\n  acknowledged: true,\n  insertedIds: {\n    '0': ObjectId('6ac352db92db87c20489e4e0'),\n    '1': ObjectId('6ac352db92db87c20489e4e1'),\n    '2': ObjectId('6ac352db92db87c20489e4e2'),\n    '3': ObjectId('6ac352db92db87c20489e4e3'),\n    '4': ObjectId('6ac352db92db87c20489e4e4'),\n    '5': ObjectId('6ac352db92db87c20489e4e5'),\n    '6': ObjectId('6ac352db92db87c20489e4e6'),\n    '7': ObjectId('6ac352db92db87c20489e4e7'),\n    '8': ObjectId('6ac352db92db87c20489e4e8'),\n    '9': ObjectId('6ac352db92db87c20489e4e9'),\n    '10': ObjectId('6ac352db92db87c20489e4ea'),\n    '11': ObjectId('6ac352db92db87c20489e4eb'),\n    '12': ObjectId('6ac352db92db87c20489e4ec'),\n    '13': ObjectId('6ac352db92db87c20489e4ed'),\n    '14': ObjectId('6ac352db92db87c20489e4ee'),\n    '15': ObjectId('6ac352db92db87c20489e4ef'),\n    '16': ObjectId('6ac352db92db87c20489e4f0'),\n    '17': ObjectId('6ac352db92db87c20489e4f1'),\n    '18': ObjectId('6ac352db92db87c20489e4f2'),\n    '19': ObjectId('6ac352db92db87c20489e4f3'),\n    '20': ObjectId('6ac352db92db87c20489e4f4'),\n    '21': ObjectId('6ac352db92db87c20489e4f5'),\n    '22': ObjectId('6ac352db92db87c20489e4f6'),\n    '23': ObjectId('6ac352db92db87c20489e4f7'),\n    '24': ObjectId('6ac352db92db87c20489e4f8'),\n    '25': ObjectId('6ac352db92db87c20489e4f9'),\n    '26': ObjectId('6ac352db92db87c20489e4fa'),\n    '27': ObjectId('6ac352db92db87c20489e4fb'),\n    '28': ObjectId('6ac352db92db87c20489e4fc'),\n    '29': ObjectId('6ac352db92db87c20489e4fd')\n  }\n}\nrs0 [direct: primary] QLThietBi> @@STEP:count_all@@\n\nrs0 [direct: primary] QLThietBi> 30\nrs0 [direct: primary] QLThietBi> @@STEP:count_by_type@@\n\nrs0 [direct: primary] QLThietBi> [\n  { _id: 'laptop', soLuong: 10 },\n  { _id: 'pc', soLuong: 13 },\n  { _id: 'printer', soLuong: 7 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:build_makers@@\n\nrs0 [direct: primary] QLThietBi> \nrs0 [direct: primary] QLThietBi> @@STEP:makers_count@@\n\nrs0 [direct: primary] QLThietBi> 8\nrs0 [direct: primary] QLThietBi> @@STEP:makers_find_A@@\n\nrs0 [direct: primary] QLThietBi> {\n  _id: 'A',\n  products: [\n    { model: 1001, type: 'pc' },\n    { model: 1002, type: 'pc' },\n    { model: 1003, type: 'pc' },\n    { model: 2004, type: 'laptop' },\n    { model: 2005, type: 'laptop' },\n    { model: 2006, type: 'laptop' }\n  ]\n}\nrs0 [direct: primary] QLThietBi> @@STEP:makers_list@@\n\nrs0 [direct: primary] QLThietBi> [\n  { _id: 'A', soSanPham: 6 },\n  { _id: 'B', soSanPham: 4 },\n  { _id: 'C', soSanPham: 1 },\n  { _id: 'D', soSanPham: 5 },\n  { _id: 'E', soSanPham: 9 },\n  { _id: 'F', soSanPham: 2 },\n  { _id: 'G', soSanPham: 1 },\n  { _id: 'H', soSanPham: 2 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:invalid_insert@@\n\nrs0 [direct: primary] QLThietBi> Uncaught:\n\nMongoServerError: Document failed validation\nAdditional information: {\n  failingDocumentId: ObjectId('6ac352db92db87c20489e4fe'),\n  details: {\n    operatorName: '$jsonSchema',\n    schemaRulesNotSatisfied: [\n      {\n        operatorName: 'properties',\n        propertiesNotSatisfied: [\n          {\n            propertyName: 'type',\n            description: 'Loại sản phẩm',\n            details: [\n              {\n                operatorName: 'enum',\n                specifiedAs: { enum: [ 'pc', 'laptop', 'printer' ] },\n                reason: 'value was not found in enum',\n                consideredValue: 'tablet'\n              }\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}\nrs0 [direct: primary] QLThietBi> @@STEP:dup_insert@@\n\nrs0 [direct: primary] QLThietBi> Uncaught \nMongoServerError: E11000 duplicate key error collection: QLThietBi.products index: uq_model dup key: { model: 1001 }\nrs0 [direct: primary] QLThietBi> @@STEP:findone_2001@@\n\nrs0 [direct: primary] QLThietBi> {\n  _id: ObjectId('6ac352db92db87c20489e4f3'),\n  maker: 'E',\n  model: 2001,\n  type: 'laptop',\n  specs: { speed: 2, ram: 2048, hd: 240, screen: 20.1 },\n  price: 3673\n}\nrs0 [direct: primary] QLThietBi> @@STEP:find_maker_B@@\n\nrs0 [direct: primary] QLThietBi> [\n  { maker: 'B', model: 1004, type: 'pc' },\n  { maker: 'B', model: 1005, type: 'pc' },\n  { maker: 'B', model: 1006, type: 'pc' },\n  { maker: 'B', model: 2007, type: 'laptop', price: 1429 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:find_printer_le120@@\n\nrs0 [direct: primary] QLThietBi> [\n  { maker: 'E', model: 3001, price: 99 },\n  { maker: 'H', model: 3006, price: 100 },\n  { maker: 'D', model: 3004, price: 120 },\n  { maker: 'D', model: 3005, price: 120 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:find_or@@\n\nrs0 [direct: primary] QLThietBi> [\n  { maker: 'F', model: 2008, price: 900 },\n  { maker: 'F', model: 2009, price: 680 },\n  { maker: 'G', model: 2010, price: 2300 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:update_one@@\n\nrs0 [direct: primary] QLThietBi> {\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}\nrs0 [direct: primary] QLThietBi> @@STEP:update_one_check@@\n\nrs0 [direct: primary] QLThietBi> { model: 2002, price: 999 }\nrs0 [direct: primary] QLThietBi> @@STEP:update_one_revert@@\n\nrs0 [direct: primary] QLThietBi> {\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}\nrs0 [direct: primary] QLThietBi> @@STEP:update_many@@\n\nrs0 [direct: primary] QLThietBi> {\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 4,\n  modifiedCount: 4,\n  upsertedCount: 0\n}\nrs0 [direct: primary] QLThietBi> @@STEP:update_many_check@@\n\nrs0 [direct: primary] QLThietBi> [\n  { model: 3002, price: 249 },\n  { model: 3003, price: 909 },\n  { model: 3005, price: 130 },\n  { model: 3007, price: 210 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:update_many_revert@@\n\nrs0 [direct: primary] QLThietBi> {\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 4,\n  modifiedCount: 4,\n  upsertedCount: 0\n}\nrs0 [direct: primary] QLThietBi> @@STEP:update_invalid@@\n\nrs0 [direct: primary] QLThietBi> Uncaught:\n\nMongoServerError: Document failed validation\nAdditional information: {\n  failingDocumentId: ObjectId('6ac352db92db87c20489e4f6'),\n  details: {\n    operatorName: '$jsonSchema',\n    schemaRulesNotSatisfied: [\n      {\n        operatorName: 'properties',\n        propertiesNotSatisfied: [\n          {\n            propertyName: 'price',\n            details: [\n              {\n                operatorName: 'minimum',\n                specifiedAs: { minimum: 0 },\n                reason: 'comparison failed',\n                consideredValue: -5\n              }\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}\nrs0 [direct: primary] QLThietBi> @@STEP:embed_ram@@\n\nrs0 [direct: primary] QLThietBi> [\n  { maker: 'A', model: 2006, specs: { ram: 2048, hd: 80 }, price: 1700 },\n  { maker: 'E', model: 2001, specs: { ram: 2048, hd: 240 }, price: 3673 },\n  { maker: 'G', model: 2010, specs: { ram: 2048, hd: 160 }, price: 2300 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:embed_color_laser@@\n\nrs0 [direct: primary] QLThietBi> [\n  {\n    maker: 'E',\n    model: 3003,\n    specs: { color: true, type: 'laser' },\n    price: 899\n  },\n  {\n    maker: 'H',\n    model: 3007,\n    specs: { color: true, type: 'laser' },\n    price: 200\n  }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:embed_exists@@\n\nrs0 [direct: primary] QLThietBi> 13\nrs0 [direct: primary] QLThietBi> @@STEP:embed_update@@\n\nrs0 [direct: primary] QLThietBi> {\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}\nrs0 [direct: primary] QLThietBi> @@STEP:embed_update_revert@@\n\nrs0 [direct: primary] QLThietBi> {\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}\nrs0 [direct: primary] QLThietBi> @@STEP:arr_printer_makers@@\n\nrs0 [direct: primary] QLThietBi> [ { _id: 'D' }, { _id: 'E' }, { _id: 'H' } ]\nrs0 [direct: primary] QLThietBi> @@STEP:arr_elemmatch@@\n\nrs0 [direct: primary] QLThietBi> [\n  {\n    _id: 'F',\n    products: [ { model: 2008, type: 'laptop' }, { model: 2009, type: 'laptop' } ]\n  },\n  { _id: 'G', products: [ { model: 2010, type: 'laptop' } ] }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:arr_size@@\n\nrs0 [direct: primary] QLThietBi> [\n  { _id: 'C', products: [ { model: 1007, type: 'pc' } ] },\n  { _id: 'G', products: [ { model: 2010, type: 'laptop' } ] }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:arr_all@@\n\nrs0 [direct: primary] QLThietBi> [ { _id: 'E' } ]\nrs0 [direct: primary] QLThietBi> @@STEP:arr_addtoset@@\n\nrs0 [direct: primary] QLThietBi> {\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 0,\n  upsertedCount: 0\n}\nrs0 [direct: primary] QLThietBi> @@STEP:arr_push@@\n\nrs0 [direct: primary] QLThietBi> {\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}\nrs0 [direct: primary] QLThietBi> @@STEP:arr_push_check@@\n\nrs0 [direct: primary] QLThietBi> {\n  _id: 'G',\n  products: [ { model: 2010, type: 'laptop' }, { model: 9999, type: 'laptop' } ]\n}\nrs0 [direct: primary] QLThietBi> @@STEP:arr_pull@@\n\nrs0 [direct: primary] QLThietBi> {\n  acknowledged: true,\n  insertedId: null,\n  matchedCount: 1,\n  modifiedCount: 1,\n  upsertedCount: 0\n}\nrs0 [direct: primary] QLThietBi> @@STEP:arr_pull_check@@\n\nrs0 [direct: primary] QLThietBi> { _id: 'G', products: [ { model: 2010, type: 'laptop' } ] }\nrs0 [direct: primary] QLThietBi> @@STEP:arr_positional@@\n\nrs0 [direct: primary] QLThietBi> [ { _id: 'E', products: [ { model: 3001, type: 'printer' } ] } ]\nrs0 [direct: primary] QLThietBi> @@STEP:verify_restore@@\n\nrs0 [direct: primary] QLThietBi> [\n  { _id: 'laptop', soLuong: 10, tongGia: 15830 },\n  { _id: 'printer', soLuong: 7, tongGia: 1777 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:verify_2003@@\n\nrs0 [direct: primary] QLThietBi> {\n  model: 2003,\n  specs: { speed: 1.8, ram: 512, hd: 60, screen: 15.4 },\n  price: 549\n}\nrs0 [direct: primary] QLThietBi> @@STEP:__end__@@\n\nrs0 [direct: primary] QLThietBi> "
+ }
+]

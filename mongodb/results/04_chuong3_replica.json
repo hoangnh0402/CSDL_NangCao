@@ -1,0 +1,258 @@
+[
+ {
+  "kind": "mongosh",
+  "name": "rs_primary",
+  "container": "mongo1",
+  "uri": "mongodb://mongo1:27017/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "rs_status",
+    "command": "rs.status().members.map(m => ({\n  name: m.name, stateStr: m.stateStr, health: m.health,\n  syncSourceHost: m.syncSourceHost, optimeDate: m.optimeDate\n}))",
+    "output": "[\n  {\n    name: 'mongo1:27017',\n    stateStr: 'PRIMARY',\n    health: 1,\n    syncSourceHost: '',\n    optimeDate: ISODate('2026-10-05T07:33:48.000Z')\n  },\n  {\n    name: 'mongo2:27017',\n    stateStr: 'SECONDARY',\n    health: 1,\n    syncSourceHost: 'mongo1:27017',\n    optimeDate: ISODate('2026-10-05T07:33:48.000Z')\n  },\n  {\n    name: 'mongo3:27017',\n    stateStr: 'SECONDARY',\n    health: 1,\n    syncSourceHost: 'mongo1:27017',\n    optimeDate: ISODate('2026-10-05T07:33:48.000Z')\n  }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "hello_primary",
+    "command": "(({ setName, primary, me, isWritablePrimary, secondary, hosts }) =>\n  ({ setName, primary, me, isWritablePrimary, secondary, hosts }))(db.hello())",
+    "output": "{\n  setName: 'rs0',\n  primary: 'mongo1:27017',\n  me: 'mongo1:27017',\n  isWritablePrimary: true,\n  secondary: false,\n  hosts: [ 'mongo1:27017', 'mongo2:27017', 'mongo3:27017' ]\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "write_majority",
+    "command": "db.kiemtra_saochep.insertOne(\n  { noiDung: \"Ghi tại Primary mongo1\", thoiDiem: new Date() },\n  { writeConcern: { w: 3, wtimeout: 5000 } }\n)",
+    "output": "{\n  acknowledged: true,\n  insertedId: ObjectId('6ac352df06e04c3e50b8c69a')\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "oplog_entry",
+    "command": "db.getSiblingDB(\"local\").oplog.rs.find(\n  { ns: \"QLThietBi.kiemtra_saochep\", op: \"i\" },\n  { _id: 0, op: 1, ns: 1, o: 1, ts: 1 }\n).sort({ $natural: -1 }).limit(1)",
+    "output": "[\n  {\n    op: 'i',\n    ns: 'QLThietBi.kiemtra_saochep',\n    o: {\n      _id: ObjectId('6ac352df06e04c3e50b8c69a'),\n      noiDung: 'Ghi tại Primary mongo1',\n      thoiDiem: ISODate('2026-10-05T07:33:51.757Z')\n    },\n    ts: Timestamp({ t: 1791185631, i: 2 })\n  }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "_sleep_lag",
+    "command": "sleep(3000)",
+    "output": "",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "repl_info",
+    "command": "rs.printReplicationInfo()",
+    "output": "actual oplog size\n'46697.223876953125 MB'\n---\nconfigured oplog size\n'46697.223876953125 MB'\n---\nlog length start to end\n'18 secs (0.01 hrs)'\n---\noplog first event time\n'Mon Oct 05 2026 07:33:33 GMT+0000 (Coordinated Universal Time)'\n---\noplog last event time\n'Mon Oct 05 2026 07:33:51 GMT+0000 (Coordinated Universal Time)'\n---\nnow\n'Mon Oct 05 2026 07:33:54 GMT+0000 (Coordinated Universal Time)'",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "repl_lag",
+    "command": "rs.printSecondaryReplicationInfo()",
+    "output": "source: mongo2:27017\n{\n  syncedTo: 'Mon Oct 05 2026 07:33:51 GMT+0000 (Coordinated Universal Time)',\n  replLag: '0 secs (0 hrs) behind the primary '\n}\n---\nsource: mongo3:27017\n{\n  syncedTo: 'Mon Oct 05 2026 07:33:51 GMT+0000 (Coordinated Universal Time)',\n  replLag: '0 secs (0 hrs) behind the primary '\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   }
+  ],
+  "raw": "rs0 [direct: primary] QLThietBi> @@STEP:rs_status@@\n\nrs0 [direct: primary] QLThietBi> [\n  {\n    name: 'mongo1:27017',\n    stateStr: 'PRIMARY',\n    health: 1,\n    syncSourceHost: '',\n    optimeDate: ISODate('2026-10-05T07:33:48.000Z')\n  },\n  {\n    name: 'mongo2:27017',\n    stateStr: 'SECONDARY',\n    health: 1,\n    syncSourceHost: 'mongo1:27017',\n    optimeDate: ISODate('2026-10-05T07:33:48.000Z')\n  },\n  {\n    name: 'mongo3:27017',\n    stateStr: 'SECONDARY',\n    health: 1,\n    syncSourceHost: 'mongo1:27017',\n    optimeDate: ISODate('2026-10-05T07:33:48.000Z')\n  }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:hello_primary@@\n\nrs0 [direct: primary] QLThietBi> {\n  setName: 'rs0',\n  primary: 'mongo1:27017',\n  me: 'mongo1:27017',\n  isWritablePrimary: true,\n  secondary: false,\n  hosts: [ 'mongo1:27017', 'mongo2:27017', 'mongo3:27017' ]\n}\nrs0 [direct: primary] QLThietBi> @@STEP:write_majority@@\n\nrs0 [direct: primary] QLThietBi> {\n  acknowledged: true,\n  insertedId: ObjectId('6ac352df06e04c3e50b8c69a')\n}\nrs0 [direct: primary] QLThietBi> @@STEP:oplog_entry@@\n\nrs0 [direct: primary] QLThietBi> [\n  {\n    op: 'i',\n    ns: 'QLThietBi.kiemtra_saochep',\n    o: {\n      _id: ObjectId('6ac352df06e04c3e50b8c69a'),\n      noiDung: 'Ghi tại Primary mongo1',\n      thoiDiem: ISODate('2026-10-05T07:33:51.757Z')\n    },\n    ts: Timestamp({ t: 1791185631, i: 2 })\n  }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:_sleep_lag@@\n\nrs0 [direct: primary] QLThietBi> \nrs0 [direct: primary] QLThietBi> @@STEP:repl_info@@\n\nrs0 [direct: primary] QLThietBi> actual oplog size\n'46697.223876953125 MB'\n---\nconfigured oplog size\n'46697.223876953125 MB'\n---\nlog length start to end\n'18 secs (0.01 hrs)'\n---\noplog first event time\n'Mon Oct 05 2026 07:33:33 GMT+0000 (Coordinated Universal Time)'\n---\noplog last event time\n'Mon Oct 05 2026 07:33:51 GMT+0000 (Coordinated Universal Time)'\n---\nnow\n'Mon Oct 05 2026 07:33:54 GMT+0000 (Coordinated Universal Time)'\nrs0 [direct: primary] QLThietBi> @@STEP:repl_lag@@\n\nrs0 [direct: primary] QLThietBi> source: mongo2:27017\n{\n  syncedTo: 'Mon Oct 05 2026 07:33:51 GMT+0000 (Coordinated Universal Time)',\n  replLag: '0 secs (0 hrs) behind the primary '\n}\n---\nsource: mongo3:27017\n{\n  syncedTo: 'Mon Oct 05 2026 07:33:51 GMT+0000 (Coordinated Universal Time)',\n  replLag: '0 secs (0 hrs) behind the primary '\n}\nrs0 [direct: primary] QLThietBi> @@STEP:__end__@@\n\nrs0 [direct: primary] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "rs_secondary2",
+  "container": "mongo2",
+  "uri": "mongodb://mongo2:27017/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "hello_secondary",
+    "command": "(({ me, isWritablePrimary, secondary, primary }) => ({ me, isWritablePrimary, secondary, primary }))(db.hello())",
+    "output": "{\n  me: 'mongo2:27017',\n  isWritablePrimary: false,\n  secondary: true,\n  primary: 'mongo1:27017'\n}",
+    "prompt": "rs0 [direct: secondary] QLThietBi>"
+   },
+   {
+    "id": "sec_counts",
+    "command": "({ products: db.products.countDocuments(), makers: db.makers.countDocuments() })",
+    "output": "{ products: 30, makers: 8 }",
+    "prompt": "rs0 [direct: secondary] QLThietBi>"
+   },
+   {
+    "id": "sec_find_test",
+    "command": "db.kiemtra_saochep.find({}, { _id: 0, noiDung: 1 })",
+    "output": "[ { noiDung: 'Ghi tại Primary mongo1' } ]",
+    "prompt": "rs0 [direct: secondary] QLThietBi>"
+   },
+   {
+    "id": "sec_find_2001",
+    "command": "db.products.findOne({ model: 2001 }, { _id: 0, maker: 1, model: 1, specs: 1, price: 1 })",
+    "output": "{\n  maker: 'E',\n  model: 2001,\n  specs: { speed: 2, ram: 2048, hd: 240, screen: 20.1 },\n  price: 3673\n}",
+    "prompt": "rs0 [direct: secondary] QLThietBi>"
+   },
+   {
+    "id": "sec_write",
+    "command": "db.products.insertOne({ maker: \"X\", model: 9002, type: \"pc\" })",
+    "output": "Uncaught \nMongoServerError[NotWritablePrimary]: not primary",
+    "prompt": "rs0 [direct: secondary] QLThietBi>"
+   },
+   {
+    "id": "dbhash_mongo2",
+    "command": "db.runCommand({ dbHash: 1, collections: [\"products\", \"makers\"] }).collections",
+    "output": "{\n  makers: 'd5370fd06a542c1d77000b1c90b07829',\n  products: 'ec7a6561b8a5c1a2fec3992630658680'\n}",
+    "prompt": "rs0 [direct: secondary] QLThietBi>"
+   }
+  ],
+  "raw": "rs0 [direct: secondary] QLThietBi> @@STEP:hello_secondary@@\n\nrs0 [direct: secondary] QLThietBi> {\n  me: 'mongo2:27017',\n  isWritablePrimary: false,\n  secondary: true,\n  primary: 'mongo1:27017'\n}\nrs0 [direct: secondary] QLThietBi> @@STEP:sec_counts@@\n\nrs0 [direct: secondary] QLThietBi> { products: 30, makers: 8 }\nrs0 [direct: secondary] QLThietBi> @@STEP:sec_find_test@@\n\nrs0 [direct: secondary] QLThietBi> [ { noiDung: 'Ghi tại Primary mongo1' } ]\nrs0 [direct: secondary] QLThietBi> @@STEP:sec_find_2001@@\n\nrs0 [direct: secondary] QLThietBi> {\n  maker: 'E',\n  model: 2001,\n  specs: { speed: 2, ram: 2048, hd: 240, screen: 20.1 },\n  price: 3673\n}\nrs0 [direct: secondary] QLThietBi> @@STEP:sec_write@@\n\nrs0 [direct: secondary] QLThietBi> Uncaught \nMongoServerError[NotWritablePrimary]: not primary\nrs0 [direct: secondary] QLThietBi> @@STEP:dbhash_mongo2@@\n\nrs0 [direct: secondary] QLThietBi> {\n  makers: 'd5370fd06a542c1d77000b1c90b07829',\n  products: 'ec7a6561b8a5c1a2fec3992630658680'\n}\nrs0 [direct: secondary] QLThietBi> @@STEP:__end__@@\n\nrs0 [direct: secondary] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "rs_secondary3",
+  "container": "mongo3",
+  "uri": "mongodb://mongo3:27017/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "sec3_counts",
+    "command": "({ products: db.products.countDocuments(), makers: db.makers.countDocuments() })",
+    "output": "{ products: 30, makers: 8 }",
+    "prompt": "rs0 [direct: secondary] QLThietBi>"
+   },
+   {
+    "id": "dbhash_mongo3",
+    "command": "db.runCommand({ dbHash: 1, collections: [\"products\", \"makers\"] }).collections",
+    "output": "{\n  makers: 'd5370fd06a542c1d77000b1c90b07829',\n  products: 'ec7a6561b8a5c1a2fec3992630658680'\n}",
+    "prompt": "rs0 [direct: secondary] QLThietBi>"
+   }
+  ],
+  "raw": "rs0 [direct: secondary] QLThietBi> @@STEP:sec3_counts@@\n\nrs0 [direct: secondary] QLThietBi> { products: 30, makers: 8 }\nrs0 [direct: secondary] QLThietBi> @@STEP:dbhash_mongo3@@\n\nrs0 [direct: secondary] QLThietBi> {\n  makers: 'd5370fd06a542c1d77000b1c90b07829',\n  products: 'ec7a6561b8a5c1a2fec3992630658680'\n}\nrs0 [direct: secondary] QLThietBi> @@STEP:__end__@@\n\nrs0 [direct: secondary] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "rs_primary_hash",
+  "container": "mongo1",
+  "uri": "mongodb://mongo1:27017/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "dbhash_mongo1",
+    "command": "db.runCommand({ dbHash: 1, collections: [\"products\", \"makers\"] }).collections",
+    "output": "{\n  makers: 'd5370fd06a542c1d77000b1c90b07829',\n  products: 'ec7a6561b8a5c1a2fec3992630658680'\n}",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   }
+  ],
+  "raw": "rs0 [direct: primary] QLThietBi> @@STEP:dbhash_mongo1@@\n\nrs0 [direct: primary] QLThietBi> {\n  makers: 'd5370fd06a542c1d77000b1c90b07829',\n  products: 'ec7a6561b8a5c1a2fec3992630658680'\n}\nrs0 [direct: primary] QLThietBi> @@STEP:__end__@@\n\nrs0 [direct: primary] QLThietBi> "
+ },
+ {
+  "kind": "shell",
+  "name": "shell",
+  "steps": [
+   {
+    "id": "stop_mongo1",
+    "command": "docker stop mongo1 && sleep 20 && docker ps -a --filter name=mongo1 --format \"{{.Names}}: {{.Status}}\"",
+    "output": "mongo1\nmongo1: Exited (137) 21 seconds ago"
+   }
+  ]
+ },
+ {
+  "kind": "mongosh",
+  "name": "rs_failover",
+  "container": "mongo2",
+  "uri": "mongodb://mongo2:27017,mongo3:27017/QLThietBi?replicaSet=rs0",
+  "steps": [
+   {
+    "id": "failover_status",
+    "command": "rs.status().members.map(m => ({ name: m.name, stateStr: m.stateStr, health: m.health }))",
+    "output": "[\n  {\n    name: 'mongo1:27017',\n    stateStr: '(not reachable/healthy)',\n    health: 0\n  },\n  { name: 'mongo2:27017', stateStr: 'PRIMARY', health: 1 },\n  { name: 'mongo3:27017', stateStr: 'SECONDARY', health: 1 }\n]",
+    "prompt": "rs0 [primary] QLThietBi>"
+   },
+   {
+    "id": "failover_write",
+    "command": "db.kiemtra_saochep.insertOne(\n  { noiDung: \"Ghi trong lúc mongo1 dừng\", thoiDiem: new Date() },\n  { writeConcern: { w: \"majority\" } }\n)",
+    "output": "{\n  acknowledged: true,\n  insertedId: ObjectId('6ac352ffaa71ff6d05c6f3c5')\n}",
+    "prompt": "rs0 [primary] QLThietBi>"
+   },
+   {
+    "id": "failover_read",
+    "command": "db.products.countDocuments({ type: \"laptop\" })",
+    "output": "10",
+    "prompt": "rs0 [primary] QLThietBi>"
+   }
+  ],
+  "raw": "rs0 [primary] QLThietBi> @@STEP:failover_status@@\n\nrs0 [primary] QLThietBi> [\n  {\n    name: 'mongo1:27017',\n    stateStr: '(not reachable/healthy)',\n    health: 0\n  },\n  { name: 'mongo2:27017', stateStr: 'PRIMARY', health: 1 },\n  { name: 'mongo3:27017', stateStr: 'SECONDARY', health: 1 }\n]\nrs0 [primary] QLThietBi> @@STEP:failover_write@@\n\nrs0 [primary] QLThietBi> {\n  acknowledged: true,\n  insertedId: ObjectId('6ac352ffaa71ff6d05c6f3c5')\n}\nrs0 [primary] QLThietBi> @@STEP:failover_read@@\n\nrs0 [primary] QLThietBi> 10\nrs0 [primary] QLThietBi> @@STEP:__end__@@\n\nrs0 [primary] QLThietBi> "
+ },
+ {
+  "kind": "shell",
+  "name": "shell",
+  "steps": [
+   {
+    "id": "start_mongo1",
+    "command": "docker start mongo1 && sleep 30 && docker ps --filter name=mongo1 --format \"{{.Names}}: {{.Status}}\"",
+    "output": "mongo1\nmongo1: Up 31 seconds"
+   }
+  ]
+ },
+ {
+  "kind": "mongosh",
+  "name": "rs_recover",
+  "container": "mongo1",
+  "uri": "mongodb://mongo1:27017/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "recover_status",
+    "command": "rs.status().members.map(m => ({ name: m.name, stateStr: m.stateStr, health: m.health }))",
+    "output": "[\n  { name: 'mongo1:27017', stateStr: 'PRIMARY', health: 1 },\n  { name: 'mongo2:27017', stateStr: 'SECONDARY', health: 1 },\n  { name: 'mongo3:27017', stateStr: 'SECONDARY', health: 1 }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "recover_data",
+    "command": "db.kiemtra_saochep.find({}, { _id: 0, noiDung: 1 })",
+    "output": "[\n  { noiDung: 'Ghi tại Primary mongo1' },\n  { noiDung: 'Ghi trong lúc mongo1 dừng' }\n]",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "recover_cleanup",
+    "command": "db.kiemtra_saochep.drop()",
+    "output": "true",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "_sleep",
+    "command": "sleep(3000)",
+    "output": "",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   },
+   {
+    "id": "dbhash_final_mongo1",
+    "command": "db.runCommand({ dbHash: 1, collections: [\"products\", \"makers\"] }).md5",
+    "output": "c78ba5b0e9b2d3609853f50f790bf49e",
+    "prompt": "rs0 [direct: primary] QLThietBi>"
+   }
+  ],
+  "raw": "rs0 [direct: primary] QLThietBi> @@STEP:recover_status@@\n\nrs0 [direct: primary] QLThietBi> [\n  { name: 'mongo1:27017', stateStr: 'PRIMARY', health: 1 },\n  { name: 'mongo2:27017', stateStr: 'SECONDARY', health: 1 },\n  { name: 'mongo3:27017', stateStr: 'SECONDARY', health: 1 }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:recover_data@@\n\nrs0 [direct: primary] QLThietBi> [\n  { noiDung: 'Ghi tại Primary mongo1' },\n  { noiDung: 'Ghi trong lúc mongo1 dừng' }\n]\nrs0 [direct: primary] QLThietBi> @@STEP:recover_cleanup@@\n\nrs0 [direct: primary] QLThietBi> true\nrs0 [direct: primary] QLThietBi> @@STEP:_sleep@@\n\nrs0 [direct: primary] QLThietBi> \nrs0 [direct: primary] QLThietBi> @@STEP:dbhash_final_mongo1@@\n\nrs0 [direct: primary] QLThietBi> c78ba5b0e9b2d3609853f50f790bf49e\nrs0 [direct: primary] QLThietBi> @@STEP:__end__@@\n\nrs0 [direct: primary] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "rs_final2",
+  "container": "mongo2",
+  "uri": "mongodb://mongo2:27017/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "dbhash_final_mongo2",
+    "command": "db.runCommand({ dbHash: 1, collections: [\"products\", \"makers\"] }).md5",
+    "output": "c78ba5b0e9b2d3609853f50f790bf49e",
+    "prompt": "rs0 [direct: secondary] QLThietBi>"
+   },
+   {
+    "id": "final_collections_mongo2",
+    "command": "db.getCollectionNames()",
+    "output": "[ 'makers', 'products' ]",
+    "prompt": "rs0 [direct: secondary] QLThietBi>"
+   }
+  ],
+  "raw": "rs0 [direct: secondary] QLThietBi> @@STEP:dbhash_final_mongo2@@\n\nrs0 [direct: secondary] QLThietBi> c78ba5b0e9b2d3609853f50f790bf49e\nrs0 [direct: secondary] QLThietBi> @@STEP:final_collections_mongo2@@\n\nrs0 [direct: secondary] QLThietBi> [ 'makers', 'products' ]\nrs0 [direct: secondary] QLThietBi> @@STEP:__end__@@\n\nrs0 [direct: secondary] QLThietBi> "
+ },
+ {
+  "kind": "mongosh",
+  "name": "rs_final3",
+  "container": "mongo3",
+  "uri": "mongodb://mongo3:27017/QLThietBi?directConnection=true",
+  "steps": [
+   {
+    "id": "dbhash_final_mongo3",
+    "command": "db.runCommand({ dbHash: 1, collections: [\"products\", \"makers\"] }).md5",
+    "output": "c78ba5b0e9b2d3609853f50f790bf49e",
+    "prompt": "rs0 [direct: secondary] QLThietBi>"
+   }
+  ],
+  "raw": "rs0 [direct: secondary] QLThietBi> @@STEP:dbhash_final_mongo3@@\n\nrs0 [direct: secondary] QLThietBi> c78ba5b0e9b2d3609853f50f790bf49e\nrs0 [direct: secondary] QLThietBi> @@STEP:__end__@@\n\nrs0 [direct: secondary] QLThietBi> "
+ }
+]

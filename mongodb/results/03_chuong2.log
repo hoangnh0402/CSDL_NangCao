@@ -1,0 +1,552 @@
+===== [ch2] yc1
+db.products.find(
+  { type: "laptop", price: { $lt: 1000 } },
+  { _id: 0, maker: 1, model: 1, "specs.speed": 1, "specs.ram": 1, "specs.hd": 1, price: 1 }
+).sort({ price: 1 })
+----->
+[
+  {
+    maker: 'E',
+    model: 2003,
+    specs: { speed: 1.8, ram: 512, hd: 60 },
+    price: 549
+  },
+  {
+    maker: 'F',
+    model: 2009,
+    specs: { speed: 1.6, ram: 512, hd: 80 },
+    price: 680
+  },
+  {
+    maker: 'F',
+    model: 2008,
+    specs: { speed: 1.6, ram: 1024, hd: 100 },
+    price: 900
+  },
+  {
+    maker: 'E',
+    model: 2002,
+    specs: { speed: 1.73, ram: 1024, hd: 80 },
+    price: 949
+  }
+]
+
+===== [ch2] yc2
+db.products.distinct("maker", { type: "laptop", "specs.hd": { $gte: 100 } })
+----->
+[ 'A', 'B', 'E', 'F', 'G' ]
+
+===== [ch2] yc3
+db.products.find(
+  { type: "laptop", "specs.screen": { $gte: 15.4 }, "specs.ram": { $gte: 1024 } },
+  { _id: 0, maker: 1, model: 1, "specs.ram": 1, "specs.screen": 1, price: 1 }
+).sort({ "specs.screen": -1, price: -1 })
+----->
+[
+  {
+    maker: 'E',
+    model: 2001,
+    specs: { ram: 2048, screen: 20.1 },
+    price: 3673
+  },
+  {
+    maker: 'A',
+    model: 2005,
+    specs: { ram: 1024, screen: 17 },
+    price: 2500
+  },
+  {
+    maker: 'E',
+    model: 2002,
+    specs: { ram: 1024, screen: 17 },
+    price: 949
+  },
+  {
+    maker: 'G',
+    model: 2010,
+    specs: { ram: 2048, screen: 15.4 },
+    price: 2300
+  },
+  {
+    maker: 'A',
+    model: 2006,
+    specs: { ram: 2048, screen: 15.4 },
+    price: 1700
+  },
+  {
+    maker: 'F',
+    model: 2008,
+    specs: { ram: 1024, screen: 15.4 },
+    price: 900
+  }
+]
+
+===== [ch2] yc4
+db.products.find(
+  { maker: "E", price: { $gte: 200, $lte: 1000 } },
+  { _id: 0, model: 1, type: 1, price: 1 }
+).sort({ price: 1 })
+----->
+[
+  { model: 3002, type: 'printer', price: 239 },
+  { model: 2003, type: 'laptop', price: 549 },
+  { model: 3003, type: 'printer', price: 899 },
+  { model: 2002, type: 'laptop', price: 949 }
+]
+
+===== [ch2] yc4_count
+db.products.countDocuments({ maker: "E", price: { $gte: 200, $lte: 1000 } })
+----->
+4
+
+===== [ch2] yc5
+db.products.aggregate([
+  { $match: { type: "laptop" } },
+  { $project: {
+      _id: 0, model: 1, maker: 1,
+      tocDo: "$specs.speed",
+      ramGB: { $divide: ["$specs.ram", 1024] },
+      oCung: "$specs.hd",
+      manHinh: "$specs.screen",
+      phanLoai: { $cond: [ { $gte: ["$specs.speed", 2.0] }, "Hiệu năng cao", "Phổ thông" ] },
+      price: 1
+  } },
+  { $sort: { model: 1 } }
+])
+----->
+[
+  {
+    maker: 'E',
+    model: 2001,
+    price: 3673,
+    tocDo: 2,
+    ramGB: 2,
+    oCung: 240,
+    manHinh: 20.1,
+    phanLoai: 'Hiệu năng cao'
+  },
+  {
+    maker: 'E',
+    model: 2002,
+    price: 949,
+    tocDo: 1.73,
+    ramGB: 1,
+    oCung: 80,
+    manHinh: 17,
+    phanLoai: 'Phổ thông'
+  },
+  {
+    maker: 'E',
+    model: 2003,
+    price: 549,
+    tocDo: 1.8,
+    ramGB: 0.5,
+    oCung: 60,
+    manHinh: 15.4,
+    phanLoai: 'Phổ thông'
+  },
+  {
+    maker: 'A',
+    model: 2004,
+    price: 1150,
+    tocDo: 2,
+    ramGB: 0.5,
+    oCung: 60,
+    manHinh: 13.3,
+    phanLoai: 'Hiệu năng cao'
+  },
+  {
+    maker: 'A',
+    model: 2005,
+    price: 2500,
+    tocDo: 2.16,
+    ramGB: 1,
+    oCung: 120,
+    manHinh: 17,
+    phanLoai: 'Hiệu năng cao'
+  },
+  {
+    maker: 'A',
+    model: 2006,
+    price: 1700,
+    tocDo: 2,
+    ramGB: 2,
+    oCung: 80,
+    manHinh: 15.4,
+    phanLoai: 'Hiệu năng cao'
+  },
+  {
+    maker: 'B',
+    model: 2007,
+    price: 1429,
+    tocDo: 1.83,
+    ramGB: 1,
+    oCung: 120,
+    manHinh: 13.3,
+    phanLoai: 'Phổ thông'
+  },
+  {
+    maker: 'F',
+    model: 2008,
+    price: 900,
+    tocDo: 1.6,
+    ramGB: 1,
+    oCung: 100,
+    manHinh: 15.4,
+    phanLoai: 'Phổ thông'
+  },
+  {
+    maker: 'F',
+    model: 2009,
+    price: 680,
+    tocDo: 1.6,
+    ramGB: 0.5,
+    oCung: 80,
+    manHinh: 14.1,
+    phanLoai: 'Phổ thông'
+  },
+  {
+    maker: 'G',
+    model: 2010,
+    price: 2300,
+    tocDo: 2,
+    ramGB: 2,
+    oCung: 160,
+    manHinh: 15.4,
+    phanLoai: 'Hiệu năng cao'
+  }
+]
+
+===== [ch2] yc6
+db.products.aggregate([
+  { $match: { type: "printer" } },
+  { $project: {
+      _id: 0, model: 1, maker: 1,
+      congNghe: "$specs.type",
+      mauIn: { $cond: [ "$specs.color", "In màu", "Đen trắng" ] },
+      price: 1
+  } },
+  { $sort: { price: 1, model: 1 } }
+])
+----->
+[
+  {
+    maker: 'E',
+    model: 3001,
+    price: 99,
+    congNghe: 'ink-jet',
+    mauIn: 'In màu'
+  },
+  {
+    maker: 'H',
+    model: 3006,
+    price: 100,
+    congNghe: 'ink-jet',
+    mauIn: 'In màu'
+  },
+  {
+    maker: 'D',
+    model: 3004,
+    price: 120,
+    congNghe: 'ink-jet',
+    mauIn: 'In màu'
+  },
+  {
+    maker: 'D',
+    model: 3005,
+    price: 120,
+    congNghe: 'laser',
+    mauIn: 'Đen trắng'
+  },
+  {
+    maker: 'H',
+    model: 3007,
+    price: 200,
+    congNghe: 'laser',
+    mauIn: 'In màu'
+  },
+  {
+    maker: 'E',
+    model: 3002,
+    price: 239,
+    congNghe: 'laser',
+    mauIn: 'Đen trắng'
+  },
+  {
+    maker: 'E',
+    model: 3003,
+    price: 899,
+    congNghe: 'laser',
+    mauIn: 'In màu'
+  }
+]
+
+===== [ch2] yc7
+db.products.aggregate([
+  { $group: {
+      _id: { maker: "$maker", type: "$type" },
+      soLuong: { $sum: 1 }
+  } },
+  { $sort: { "_id.maker": 1, "_id.type": 1 } }
+])
+----->
+[
+  { _id: { maker: 'A', type: 'laptop' }, soLuong: 3 },
+  { _id: { maker: 'A', type: 'pc' }, soLuong: 3 },
+  { _id: { maker: 'B', type: 'laptop' }, soLuong: 1 },
+  { _id: { maker: 'B', type: 'pc' }, soLuong: 3 },
+  { _id: { maker: 'C', type: 'pc' }, soLuong: 1 },
+  { _id: { maker: 'D', type: 'pc' }, soLuong: 3 },
+  { _id: { maker: 'D', type: 'printer' }, soLuong: 2 },
+  { _id: { maker: 'E', type: 'laptop' }, soLuong: 3 },
+  { _id: { maker: 'E', type: 'pc' }, soLuong: 3 },
+  { _id: { maker: 'E', type: 'printer' }, soLuong: 3 },
+  { _id: { maker: 'F', type: 'laptop' }, soLuong: 2 },
+  { _id: { maker: 'G', type: 'laptop' }, soLuong: 1 },
+  { _id: { maker: 'H', type: 'printer' }, soLuong: 2 }
+]
+
+===== [ch2] yc8
+db.products.aggregate([
+  { $match: { type: "laptop" } },
+  { $group: {
+      _id: "$maker",
+      soLaptop: { $sum: 1 },
+      giaTB: { $avg: "$price" },
+      giaMin: { $min: "$price" },
+      giaMax: { $max: "$price" }
+  } },
+  { $project: { soLaptop: 1, giaTB: { $round: ["$giaTB", 2] }, giaMin: 1, giaMax: 1 } },
+  { $sort: { giaTB: -1 } }
+])
+----->
+[
+  { _id: 'G', soLaptop: 1, giaMin: 2300, giaMax: 2300, giaTB: 2300 },
+  { _id: 'A', soLaptop: 3, giaMin: 1150, giaMax: 2500, giaTB: 1783.33 },
+  { _id: 'E', soLaptop: 3, giaMin: 549, giaMax: 3673, giaTB: 1723.67 },
+  { _id: 'B', soLaptop: 1, giaMin: 1429, giaMax: 1429, giaTB: 1429 },
+  { _id: 'F', soLaptop: 2, giaMin: 680, giaMax: 900, giaTB: 790 }
+]
+
+===== [ch2] yc9
+db.products.aggregate([
+  { $group: {
+      _id: "$type",
+      soLuong: { $sum: 1 },
+      coGia: { $sum: { $cond: [ { $ifNull: ["$price", false] }, 1, 0 ] } },
+      tongGia: { $sum: "$price" },
+      giaTB: { $avg: "$price" }
+  } },
+  { $project: { soLuong: 1, coGia: 1, tongGia: 1, giaTB: { $round: ["$giaTB", 2] } } },
+  { $sort: { soLuong: -1 } }
+])
+----->
+[
+  { _id: 'pc', soLuong: 13, coGia: 0, tongGia: 0, giaTB: null },
+  { _id: 'laptop', soLuong: 10, coGia: 10, tongGia: 15830, giaTB: 1583 },
+  { _id: 'printer', soLuong: 7, coGia: 7, tongGia: 1777, giaTB: 253.86 }
+]
+
+===== [ch2] yc10
+db.products.aggregate([
+  { $match: { type: "laptop" } },
+  { $group: { _id: "$specs.hd", soLaptop: { $sum: 1 }, dsModel: { $push: "$model" } } },
+  { $match: { soLaptop: { $gte: 2 } } },
+  { $sort: { soLaptop: -1, _id: 1 } }
+])
+----->
+[
+  { _id: 80, soLaptop: 3, dsModel: [ 2006, 2002, 2009 ] },
+  { _id: 60, soLaptop: 2, dsModel: [ 2004, 2003 ] },
+  { _id: 120, soLaptop: 2, dsModel: [ 2005, 2007 ] }
+]
+
+===== [ch2] yc11
+db.products.aggregate([
+  { $match: { price: { $exists: true } } },
+  { $sort: { price: -1 } },
+  { $limit: 3 },
+  { $project: { _id: 0, maker: 1, model: 1, type: 1, price: 1 } }
+])
+----->
+[
+  { maker: 'E', model: 2001, type: 'laptop', price: 3673 },
+  { maker: 'A', model: 2005, type: 'laptop', price: 2500 },
+  { maker: 'G', model: 2010, type: 'laptop', price: 2300 }
+]
+
+===== [ch2] yc12
+db.products.aggregate([
+  { $match: { type: "laptop" } },
+  { $bucket: {
+      groupBy: "$price",
+      boundaries: [0, 1000, 2000, 5000],
+      default: "Khác",
+      output: { soLaptop: { $sum: 1 }, dsModel: { $push: "$model" }, giaTB: { $avg: "$price" } }
+  } },
+  { $project: { soLaptop: 1, dsModel: 1, giaTB: { $round: ["$giaTB", 2] } } }
+])
+----->
+[
+  {
+    _id: 0,
+    soLaptop: 4,
+    dsModel: [ 2002, 2003, 2008, 2009 ],
+    giaTB: 769.5
+  },
+  {
+    _id: 1000,
+    soLaptop: 3,
+    dsModel: [ 2004, 2006, 2007 ],
+    giaTB: 1426.33
+  },
+  {
+    _id: 2000,
+    soLaptop: 3,
+    dsModel: [ 2005, 2001, 2010 ],
+    giaTB: 2824.33
+  }
+]
+
+===== [ch2] yc13a
+db.products.aggregate([
+  { $group: { _id: "$maker", cacLoai: { $addToSet: "$type" } } },
+  { $match: { cacLoai: { $all: ["laptop"], $nin: ["pc"] } } },
+  { $sort: { _id: 1 } }
+])
+----->
+[
+  { _id: 'F', cacLoai: [ 'laptop' ] },
+  { _id: 'G', cacLoai: [ 'laptop' ] }
+]
+
+===== [ch2] yc13b
+db.products.aggregate([
+  { $group: { _id: "$maker", cacLoai: { $addToSet: "$type" } } },
+  { $project: { soLoai: { $size: "$cacLoai" }, cacLoai: { $sortArray: { input: "$cacLoai", sortBy: 1 } } } },
+  { $match: { soLoai: { $gte: 2 } } },
+  { $sort: { soLoai: -1, _id: 1 } }
+])
+----->
+[
+  { _id: 'E', soLoai: 3, cacLoai: [ 'laptop', 'pc', 'printer' ] },
+  { _id: 'A', soLoai: 2, cacLoai: [ 'laptop', 'pc' ] },
+  { _id: 'B', soLoai: 2, cacLoai: [ 'laptop', 'pc' ] },
+  { _id: 'D', soLoai: 2, cacLoai: [ 'pc', 'printer' ] }
+]
+
+===== [ch2] yc14
+db.makers.aggregate([
+  { $match: { "products.type": "laptop" } },
+  { $lookup: {
+      from: "products",
+      localField: "products.model",
+      foreignField: "model",
+      as: "chiTiet"
+  } },
+  { $project: {
+      _id: 0, maker: "$_id",
+      laptops: { $filter: { input: "$chiTiet", as: "p", cond: { $eq: ["$$p.type", "laptop"] } } }
+  } },
+  { $project: {
+      maker: 1,
+      soLaptop: { $size: "$laptops" },
+      dsModel: { $sortArray: { input: "$laptops.model", sortBy: 1 } },
+      giaTB: { $round: [ { $avg: "$laptops.price" }, 2 ] },
+      ramMax: { $max: "$laptops.specs.ram" }
+  } },
+  { $sort: { maker: 1 } }
+])
+----->
+[
+  {
+    maker: 'A',
+    soLaptop: 3,
+    dsModel: [ 2004, 2005, 2006 ],
+    giaTB: 1783.33,
+    ramMax: 2048
+  },
+  {
+    maker: 'B',
+    soLaptop: 1,
+    dsModel: [ 2007 ],
+    giaTB: 1429,
+    ramMax: 1024
+  },
+  {
+    maker: 'E',
+    soLaptop: 3,
+    dsModel: [ 2001, 2002, 2003 ],
+    giaTB: 1723.67,
+    ramMax: 2048
+  },
+  {
+    maker: 'F',
+    soLaptop: 2,
+    dsModel: [ 2008, 2009 ],
+    giaTB: 790,
+    ramMax: 1024
+  },
+  {
+    maker: 'G',
+    soLaptop: 1,
+    dsModel: [ 2010 ],
+    giaTB: 2300,
+    ramMax: 2048
+  }
+]
+
+===== [ch2] yc15
+db.products.aggregate([
+  { $match: { type: "printer" } },
+  { $lookup: { from: "makers", localField: "maker", foreignField: "_id", as: "nsx" } },
+  { $unwind: "$nsx" },
+  { $project: {
+      _id: 0, model: 1, maker: 1, price: 1,
+      tongSanPhamCuaNSX: { $size: "$nsx.products" }
+  } },
+  { $sort: { maker: 1, model: 1 } }
+])
+----->
+[
+  { maker: 'D', model: 3004, price: 120, tongSanPhamCuaNSX: 5 },
+  { maker: 'D', model: 3005, price: 120, tongSanPhamCuaNSX: 5 },
+  { maker: 'E', model: 3001, price: 99, tongSanPhamCuaNSX: 9 },
+  { maker: 'E', model: 3002, price: 239, tongSanPhamCuaNSX: 9 },
+  { maker: 'E', model: 3003, price: 899, tongSanPhamCuaNSX: 9 },
+  { maker: 'H', model: 3006, price: 100, tongSanPhamCuaNSX: 2 },
+  { maker: 'H', model: 3007, price: 200, tongSanPhamCuaNSX: 2 }
+]
+
+===== [ch2] yc16
+db.makers.aggregate([
+  { $match: { "products.type": "printer" } },
+  { $lookup: {
+      from: "products",
+      let: { mk: "$_id" },
+      pipeline: [
+        { $match: { $expr: { $and: [ { $eq: ["$maker", "$$mk"] }, { $eq: ["$type", "printer"] } ] } } },
+        { $group: {
+            _id: null,
+            soMayIn: { $sum: 1 },
+            soMayInMau: { $sum: { $cond: ["$specs.color", 1, 0] } },
+            giaThapNhat: { $min: "$price" }
+        } }
+      ],
+      as: "thongKe"
+  } },
+  { $unwind: "$thongKe" },
+  { $project: {
+      _id: 0, maker: "$_id",
+      soMayIn: "$thongKe.soMayIn",
+      soMayInMau: "$thongKe.soMayInMau",
+      giaThapNhat: "$thongKe.giaThapNhat"
+  } }
+])
+----->
+[
+  { maker: 'D', soMayIn: 2, soMayInMau: 1, giaThapNhat: 120 },
+  { maker: 'E', soMayIn: 3, soMayInMau: 2, giaThapNhat: 99 },
+  { maker: 'H', soMayIn: 2, soMayInMau: 2, giaThapNhat: 100 }
+]
+

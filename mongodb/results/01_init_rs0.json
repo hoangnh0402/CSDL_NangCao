@@ -1,0 +1,35 @@
+[
+ {
+  "kind": "mongosh",
+  "name": "rs0_init",
+  "container": "mongo1",
+  "uri": "mongodb://mongo1:27017/?directConnection=true",
+  "steps": [
+   {
+    "id": "rs_initiate",
+    "command": "rs.initiate({\n  _id: \"rs0\",\n  members: [\n    { _id: 0, host: \"mongo1:27017\", priority: 2 },\n    { _id: 1, host: \"mongo2:27017\", priority: 1 },\n    { _id: 2, host: \"mongo3:27017\", priority: 1 }\n  ]\n})",
+    "output": "{\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185613, i: 1 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185613, i: 1 })\n}",
+    "prompt": "test>"
+   },
+   {
+    "id": "_wait",
+    "command": "sleep(12000)",
+    "output": "",
+    "prompt": "rs0 [direct: secondary] test>"
+   },
+   {
+    "id": "rs_conf",
+    "command": "rs.conf().members.map(m => ({ _id: m._id, host: m.host, priority: m.priority, votes: m.votes }))",
+    "output": "[\n  { _id: 0, host: 'mongo1:27017', priority: 2, votes: 1 },\n  { _id: 1, host: 'mongo2:27017', priority: 1, votes: 1 },\n  { _id: 2, host: 'mongo3:27017', priority: 1, votes: 1 }\n]",
+    "prompt": "rs0 [direct: primary] test>"
+   },
+   {
+    "id": "version",
+    "command": "db.version()",
+    "output": "8.0.32",
+    "prompt": "rs0 [direct: primary] test>"
+   }
+  ],
+  "raw": "test> @@STEP:rs_initiate@@\n\ntest> {\n  ok: 1,\n  '$clusterTime': {\n    clusterTime: Timestamp({ t: 1791185613, i: 1 }),\n    signature: {\n      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),\n      keyId: Long('0')\n    }\n  },\n  operationTime: Timestamp({ t: 1791185613, i: 1 })\n}\nrs0 [direct: secondary] test> @@STEP:_wait@@\n\nrs0 [direct: secondary] test> \nrs0 [direct: primary] test> @@STEP:rs_conf@@\n\nrs0 [direct: primary] test> [\n  { _id: 0, host: 'mongo1:27017', priority: 2, votes: 1 },\n  { _id: 1, host: 'mongo2:27017', priority: 1, votes: 1 },\n  { _id: 2, host: 'mongo3:27017', priority: 1, votes: 1 }\n]\nrs0 [direct: primary] test> @@STEP:version@@\n\nrs0 [direct: primary] test> 8.0.32\nrs0 [direct: primary] test> @@STEP:__end__@@\n\nrs0 [direct: primary] test> "
+ }
+]

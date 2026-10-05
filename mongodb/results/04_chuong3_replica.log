@@ -1,0 +1,267 @@
+===== [rs_primary] rs_status
+rs.status().members.map(m => ({
+  name: m.name, stateStr: m.stateStr, health: m.health,
+  syncSourceHost: m.syncSourceHost, optimeDate: m.optimeDate
+}))
+----->
+[
+  {
+    name: 'mongo1:27017',
+    stateStr: 'PRIMARY',
+    health: 1,
+    syncSourceHost: '',
+    optimeDate: ISODate('2026-10-05T07:33:48.000Z')
+  },
+  {
+    name: 'mongo2:27017',
+    stateStr: 'SECONDARY',
+    health: 1,
+    syncSourceHost: 'mongo1:27017',
+    optimeDate: ISODate('2026-10-05T07:33:48.000Z')
+  },
+  {
+    name: 'mongo3:27017',
+    stateStr: 'SECONDARY',
+    health: 1,
+    syncSourceHost: 'mongo1:27017',
+    optimeDate: ISODate('2026-10-05T07:33:48.000Z')
+  }
+]
+
+===== [rs_primary] hello_primary
+(({ setName, primary, me, isWritablePrimary, secondary, hosts }) =>
+  ({ setName, primary, me, isWritablePrimary, secondary, hosts }))(db.hello())
+----->
+{
+  setName: 'rs0',
+  primary: 'mongo1:27017',
+  me: 'mongo1:27017',
+  isWritablePrimary: true,
+  secondary: false,
+  hosts: [ 'mongo1:27017', 'mongo2:27017', 'mongo3:27017' ]
+}
+
+===== [rs_primary] write_majority
+db.kiemtra_saochep.insertOne(
+  { noiDung: "Ghi tại Primary mongo1", thoiDiem: new Date() },
+  { writeConcern: { w: 3, wtimeout: 5000 } }
+)
+----->
+{
+  acknowledged: true,
+  insertedId: ObjectId('6ac352df06e04c3e50b8c69a')
+}
+
+===== [rs_primary] oplog_entry
+db.getSiblingDB("local").oplog.rs.find(
+  { ns: "QLThietBi.kiemtra_saochep", op: "i" },
+  { _id: 0, op: 1, ns: 1, o: 1, ts: 1 }
+).sort({ $natural: -1 }).limit(1)
+----->
+[
+  {
+    op: 'i',
+    ns: 'QLThietBi.kiemtra_saochep',
+    o: {
+      _id: ObjectId('6ac352df06e04c3e50b8c69a'),
+      noiDung: 'Ghi tại Primary mongo1',
+      thoiDiem: ISODate('2026-10-05T07:33:51.757Z')
+    },
+    ts: Timestamp({ t: 1791185631, i: 2 })
+  }
+]
+
+===== [rs_primary] _sleep_lag
+sleep(3000)
+----->
+
+
+===== [rs_primary] repl_info
+rs.printReplicationInfo()
+----->
+actual oplog size
+'46697.223876953125 MB'
+---
+configured oplog size
+'46697.223876953125 MB'
+---
+log length start to end
+'18 secs (0.01 hrs)'
+---
+oplog first event time
+'Mon Oct 05 2026 07:33:33 GMT+0000 (Coordinated Universal Time)'
+---
+oplog last event time
+'Mon Oct 05 2026 07:33:51 GMT+0000 (Coordinated Universal Time)'
+---
+now
+'Mon Oct 05 2026 07:33:54 GMT+0000 (Coordinated Universal Time)'
+
+===== [rs_primary] repl_lag
+rs.printSecondaryReplicationInfo()
+----->
+source: mongo2:27017
+{
+  syncedTo: 'Mon Oct 05 2026 07:33:51 GMT+0000 (Coordinated Universal Time)',
+  replLag: '0 secs (0 hrs) behind the primary '
+}
+---
+source: mongo3:27017
+{
+  syncedTo: 'Mon Oct 05 2026 07:33:51 GMT+0000 (Coordinated Universal Time)',
+  replLag: '0 secs (0 hrs) behind the primary '
+}
+
+===== [rs_secondary2] hello_secondary
+(({ me, isWritablePrimary, secondary, primary }) => ({ me, isWritablePrimary, secondary, primary }))(db.hello())
+----->
+{
+  me: 'mongo2:27017',
+  isWritablePrimary: false,
+  secondary: true,
+  primary: 'mongo1:27017'
+}
+
+===== [rs_secondary2] sec_counts
+({ products: db.products.countDocuments(), makers: db.makers.countDocuments() })
+----->
+{ products: 30, makers: 8 }
+
+===== [rs_secondary2] sec_find_test
+db.kiemtra_saochep.find({}, { _id: 0, noiDung: 1 })
+----->
+[ { noiDung: 'Ghi tại Primary mongo1' } ]
+
+===== [rs_secondary2] sec_find_2001
+db.products.findOne({ model: 2001 }, { _id: 0, maker: 1, model: 1, specs: 1, price: 1 })
+----->
+{
+  maker: 'E',
+  model: 2001,
+  specs: { speed: 2, ram: 2048, hd: 240, screen: 20.1 },
+  price: 3673
+}
+
+===== [rs_secondary2] sec_write
+db.products.insertOne({ maker: "X", model: 9002, type: "pc" })
+----->
+Uncaught 
+MongoServerError[NotWritablePrimary]: not primary
+
+===== [rs_secondary2] dbhash_mongo2
+db.runCommand({ dbHash: 1, collections: ["products", "makers"] }).collections
+----->
+{
+  makers: 'd5370fd06a542c1d77000b1c90b07829',
+  products: 'ec7a6561b8a5c1a2fec3992630658680'
+}
+
+===== [rs_secondary3] sec3_counts
+({ products: db.products.countDocuments(), makers: db.makers.countDocuments() })
+----->
+{ products: 30, makers: 8 }
+
+===== [rs_secondary3] dbhash_mongo3
+db.runCommand({ dbHash: 1, collections: ["products", "makers"] }).collections
+----->
+{
+  makers: 'd5370fd06a542c1d77000b1c90b07829',
+  products: 'ec7a6561b8a5c1a2fec3992630658680'
+}
+
+===== [rs_primary_hash] dbhash_mongo1
+db.runCommand({ dbHash: 1, collections: ["products", "makers"] }).collections
+----->
+{
+  makers: 'd5370fd06a542c1d77000b1c90b07829',
+  products: 'ec7a6561b8a5c1a2fec3992630658680'
+}
+
+===== [shell] stop_mongo1
+docker stop mongo1 && sleep 20 && docker ps -a --filter name=mongo1 --format "{{.Names}}: {{.Status}}"
+----->
+mongo1
+mongo1: Exited (137) 21 seconds ago
+
+===== [rs_failover] failover_status
+rs.status().members.map(m => ({ name: m.name, stateStr: m.stateStr, health: m.health }))
+----->
+[
+  {
+    name: 'mongo1:27017',
+    stateStr: '(not reachable/healthy)',
+    health: 0
+  },
+  { name: 'mongo2:27017', stateStr: 'PRIMARY', health: 1 },
+  { name: 'mongo3:27017', stateStr: 'SECONDARY', health: 1 }
+]
+
+===== [rs_failover] failover_write
+db.kiemtra_saochep.insertOne(
+  { noiDung: "Ghi trong lúc mongo1 dừng", thoiDiem: new Date() },
+  { writeConcern: { w: "majority" } }
+)
+----->
+{
+  acknowledged: true,
+  insertedId: ObjectId('6ac352ffaa71ff6d05c6f3c5')
+}
+
+===== [rs_failover] failover_read
+db.products.countDocuments({ type: "laptop" })
+----->
+10
+
+===== [shell] start_mongo1
+docker start mongo1 && sleep 30 && docker ps --filter name=mongo1 --format "{{.Names}}: {{.Status}}"
+----->
+mongo1
+mongo1: Up 31 seconds
+
+===== [rs_recover] recover_status
+rs.status().members.map(m => ({ name: m.name, stateStr: m.stateStr, health: m.health }))
+----->
+[
+  { name: 'mongo1:27017', stateStr: 'PRIMARY', health: 1 },
+  { name: 'mongo2:27017', stateStr: 'SECONDARY', health: 1 },
+  { name: 'mongo3:27017', stateStr: 'SECONDARY', health: 1 }
+]
+
+===== [rs_recover] recover_data
+db.kiemtra_saochep.find({}, { _id: 0, noiDung: 1 })
+----->
+[
+  { noiDung: 'Ghi tại Primary mongo1' },
+  { noiDung: 'Ghi trong lúc mongo1 dừng' }
+]
+
+===== [rs_recover] recover_cleanup
+db.kiemtra_saochep.drop()
+----->
+true
+
+===== [rs_recover] _sleep
+sleep(3000)
+----->
+
+
+===== [rs_recover] dbhash_final_mongo1
+db.runCommand({ dbHash: 1, collections: ["products", "makers"] }).md5
+----->
+c78ba5b0e9b2d3609853f50f790bf49e
+
+===== [rs_final2] dbhash_final_mongo2
+db.runCommand({ dbHash: 1, collections: ["products", "makers"] }).md5
+----->
+c78ba5b0e9b2d3609853f50f790bf49e
+
+===== [rs_final2] final_collections_mongo2
+db.getCollectionNames()
+----->
+[ 'makers', 'products' ]
+
+===== [rs_final3] dbhash_final_mongo3
+db.runCommand({ dbHash: 1, collections: ["products", "makers"] }).md5
+----->
+c78ba5b0e9b2d3609853f50f790bf49e
+

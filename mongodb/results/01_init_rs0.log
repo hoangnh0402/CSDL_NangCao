@@ -1,0 +1,41 @@
+===== [rs0_init] rs_initiate
+rs.initiate({
+  _id: "rs0",
+  members: [
+    { _id: 0, host: "mongo1:27017", priority: 2 },
+    { _id: 1, host: "mongo2:27017", priority: 1 },
+    { _id: 2, host: "mongo3:27017", priority: 1 }
+  ]
+})
+----->
+{
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1791185613, i: 1 }),
+    signature: {
+      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),
+      keyId: Long('0')
+    }
+  },
+  operationTime: Timestamp({ t: 1791185613, i: 1 })
+}
+
+===== [rs0_init] _wait
+sleep(12000)
+----->
+
+
+===== [rs0_init] rs_conf
+rs.conf().members.map(m => ({ _id: m._id, host: m.host, priority: m.priority, votes: m.votes }))
+----->
+[
+  { _id: 0, host: 'mongo1:27017', priority: 2, votes: 1 },
+  { _id: 1, host: 'mongo2:27017', priority: 1, votes: 1 },
+  { _id: 2, host: 'mongo3:27017', priority: 1, votes: 1 }
+]
+
+===== [rs0_init] version
+db.version()
+----->
+8.0.32
+
